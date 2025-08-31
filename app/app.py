@@ -11,7 +11,6 @@ import vosk
 import pyaudio
 import pyttsx3
 import webbrowser
-import keyboard
 from typing import Dict, Any, Optional
 
 # Import các module tùy chỉnh (cần được tạo riêng)
@@ -203,6 +202,7 @@ class SpeakAndSpeakApp:
         self.tts_engine = TTSEngine()
         self.current_word = ""
         self.current_sentence = ""
+        self.is_recording = False
         
         # Apply theme and color scheme
         self.apply_theme()
@@ -212,6 +212,9 @@ class SpeakAndSpeakApp:
         self.window.title("Speak & Speak")
         self.window.geometry("800x600")
         self.window.resizable(True, True)
+        
+        # Focus window for key bindings
+        self.window.focus_set()
         
         # Create main tabview
         self.tabview = ctk.CTkTabview(self.window)
@@ -239,20 +242,30 @@ class SpeakAndSpeakApp:
         ctk.set_default_color_theme(color)
 
     def setup_key_bindings(self):
-        def on_space_press():
-            # Only record if we're on Word or Sentence tab
-            current_tab = self.tabview.get()
-            if current_tab in ["Word", "Sentence"]:
-                self.start_recording(current_tab)
+        # Bind space key press and release events to the main window
+        self.window.bind('<KeyPress-space>', self.on_space_press)
+        self.window.bind('<KeyRelease-space>', self.on_space_release)
         
-        def on_space_release():
+        # Make sure the window can receive key events
+        self.window.focus_set()
+        
+        # Also bind to the tabview to ensure focus
+        self.tabview.bind('<KeyPress-space>', self.on_space_press)
+        self.tabview.bind('<KeyRelease-space>', self.on_space_release)
+
+    def on_space_press(self, event):
+        # Prevent multiple recording instances
+        if self.is_recording:
+            return
+        
+        # Only record if we're on Word or Sentence tab
+        current_tab = self.tabview.get()
+        if current_tab in ["Word", "Sentence"]:
+            self.start_recording(current_tab)
+
+    def on_space_release(self, event):
+        if self.is_recording:
             self.stop_recording()
-        
-        try:
-            keyboard.on_press_key("space", lambda _: on_space_press())
-            keyboard.on_release_key("space", lambda _: on_space_release())
-        except Exception as e:
-            print(f"Keyboard binding error: {e}")
 
     def create_welcome_tab(self):
         welcome_tab = self.tabview.add("Welcome")
@@ -503,19 +516,31 @@ class SpeakAndSpeakApp:
             self.sentence_label.configure(text=f"Error: {str(e)}")
 
     def start_recording(self, tab_type):
+        if self.is_recording:
+            return
+            
+        self.is_recording = True
+        
         if tab_type == "Word":
             if not self.current_word:
+                self.is_recording = False
                 return
             self.word_status_label.configure(text="🔴 Recording... (Release SPACE to stop)")
             self.audio_recorder.start_recording(lambda result: self.process_word_result(result))
         elif tab_type == "Sentence":
             if not self.current_sentence:
+                self.is_recording = False
                 return
             self.sentence_status_label.configure(text="🔴 Recording... (Release SPACE to stop)")
             self.audio_recorder.start_recording(lambda result: self.process_sentence_result(result))
 
     def stop_recording(self):
+        if not self.is_recording:
+            return
+            
+        self.is_recording = False
         self.audio_recorder.stop_recording()
+        
         current_tab = self.tabview.get()
         if current_tab == "Word":
             self.word_status_label.configure(text="⏳ Đang xử lý...")
@@ -533,6 +558,9 @@ class SpeakAndSpeakApp:
                 self.window.after(0, lambda: self.display_word_result(result, recognized_text))
             except Exception as e:
                 self.window.after(0, lambda: self.display_word_result({"error": str(e)}, recognized_text))
+            finally:
+                # Reset recording state
+                self.is_recording = False
         
         threading.Thread(target=process, daemon=True).start()
 
@@ -547,6 +575,9 @@ class SpeakAndSpeakApp:
                 self.window.after(0, lambda: self.display_sentence_result(result, recognized_text))
             except Exception as e:
                 self.window.after(0, lambda: self.display_sentence_result({"error": str(e)}, recognized_text))
+            finally:
+                # Reset recording state
+                self.is_recording = False
         
         threading.Thread(target=process, daemon=True).start()
 
