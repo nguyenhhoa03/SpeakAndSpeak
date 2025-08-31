@@ -14,6 +14,8 @@ Usage:
 
 import re
 import difflib
+import yaml
+import os
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 import eng_to_ipa as ipa
@@ -30,8 +32,10 @@ class WordError:
 class PronunciationAssessment:
     """Class chính để đánh giá phát âm"""
     
-    def __init__(self):
+    def __init__(self, data_file="user-data.yaml"):
         self.word_errors = []
+        self.data_file = data_file
+        self.user_data = self._load_user_data()
     
     def _clean_text(self, text: str) -> str:
         """Làm sạch text, loại bỏ dấu câu và chuẩn hóa"""
@@ -166,6 +170,103 @@ class PronunciationAssessment:
         
         return sorted(matches, key=lambda x: x[0])
     
+    def _load_user_data(self) -> List[Dict]:
+        """Tải dữ liệu user từ file YAML"""
+        if not os.path.exists(self.data_file):
+            return []
+        
+        try:
+            with open(self.data_file, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f) or []
+                return data
+        except Exception as e:
+            print(f"Warning: Could not load {self.data_file}: {e}")
+            return []
+    
+    def _save_user_data(self):
+        """Lưu dữ liệu user vào file YAML"""
+        try:
+            with open(self.data_file, 'w', encoding='utf-8') as f:
+                yaml.dump(self.user_data, f, default_flow_style=False, 
+                         allow_unicode=True, indent=2)
+        except Exception as e:
+            print(f"Error saving to {self.data_file}: {e}")
+    
+    def _extract_wrong_ipa_sounds(self, error: WordError) -> List[str]:
+        """Trích xuất các âm IPA bị sai từ WordError"""
+        wrong_sounds = []
+        
+        for diff in error.ipa_differences:
+            if '→' in diff:
+                # Trường hợp thay thế: 'expected' → 'actual'
+                parts = diff.split(' → ')
+                if len(parts) == 2:
+                    expected = parts[0].strip("'")
+                    wrong_sounds.extend(list(expected))
+            elif 'missing' in diff:
+                # Trường hợp thiếu âm: missing 'sound'
+                missing_sound = diff.split("'")[1] if "'" in diff else ""
+                if missing_sound:
+                    wrong_sounds.extend(list(missing_sound))
+            elif 'extra' in diff:
+                # Trường hợp thừa âm: extra 'sound'
+                extra_sound = diff.split("'")[1] if "'" in diff else ""
+                if extra_sound:
+                    wrong_sounds.extend(list(extra_sound))
+        
+        # Loại bỏ các ký tự đặc biệt và khoảng trắng
+        wrong_sounds = [sound for sound in wrong_sounds if sound.strip() and sound not in [' ', '\t', '\n']]
+        
+        # Loại bỏ duplicate nhưng giữ thứ tự
+        seen = set()
+        unique_sounds = []
+        for sound in wrong_sounds:
+            if sound not in seen:
+                seen.add(sound)
+                unique_sounds.append(sound)
+        
+        return unique_sounds
+    
+    def _save_assessment_result(self, original_text: str, spoken_text: str):
+        """Lưu kết quả đánh giá vào user-data.yaml"""
+        # Tạo entry mới
+        wrong_words_data = []
+        
+        for error in self.word_errors:
+            if error.error_type != "missing":  # Chỉ lưu từ bị phát âm sai, không lưu từ thiếu
+                wrong_ipa_sounds = self._extract_wrong_ipa_sounds(error)
+                if wrong_ipa_sounds:  # Chỉ thêm nếu có âm bị sai
+                    wrong_words_data.append({
+                        "word": error.word,
+                        "wrong_ipa": wrong_ipa_sounds
+                    })
+        
+        # Tạo node mới
+        new_entry = {
+            "sentence": original_text.strip(),
+            "result": len(self.word_errors) == 0,  # True nếu không có lỗi
+            "wrong_words": wrong_words_data
+        }
+        
+        # Kiểm tra xem câu này đã tồn tại chưa
+        existing_index = -1
+        for i, entry in enumerate(self.user_data):
+            if entry.get("sentence", "").strip().lower() == original_text.strip().lower():
+                existing_index = i
+                break
+        
+        if existing_index >= 0:
+            # Cập nhật entry cũ
+            self.user_data[existing_index] = new_entry
+            print(f"Updated existing entry for: '{original_text[:50]}...'")
+        else:
+            # Thêm entry mới vào cuối
+            self.user_data.append(new_entry)
+            print(f"Added new entry for: '{original_text[:50]}...'")
+        
+        # Lưu vào file
+        self._save_user_data()
+    
     def _identify_word_errors(self, original_words: List[str], spoken_words: List[str]) -> List[WordError]:
         """Xác định các từ bị phát âm sai"""
         errors = []
@@ -211,13 +312,14 @@ class PronunciationAssessment:
         
         return errors
     
-    def assess_pronunciation(self, original_text: str, spoken_text: str) -> str:
+    def assess_pronunciation(self, original_text: str, spoken_text: str, save_result: bool = True) -> str:
         """
         Hàm chính để đánh giá phát âm
         
         Args:
             original_text: Câu/từ gốc
             spoken_text: Kết quả từ Speech-to-Text
+            save_result: Có lưu kết quả vào user-data.yaml không
             
         Returns:
             str: Kết quả đánh giá với câu được đánh dấu và chi tiết lỗi
@@ -231,6 +333,10 @@ class PronunciationAssessment:
         
         # Tìm lỗi
         self.word_errors = self._identify_word_errors(original_words, spoken_words)
+        
+        # Lưu kết quả nếu được yêu cầu
+        if save_result:
+            self._save_assessment_result(original_text, spoken_text)
         
         # Tạo câu được đánh dấu
         marked_sentence = self._create_marked_sentence(original_text)
@@ -271,27 +377,95 @@ class PronunciationAssessment:
                 marked_words.append(word)
         
         return " ".join(marked_words)
+    
+    def get_user_statistics(self) -> Dict:
+        """Lấy thống kê từ dữ liệu user"""
+        if not self.user_data:
+            return {
+                "total_assessments": 0,
+                "correct_assessments": 0,
+                "accuracy_rate": 0.0,
+                "most_common_wrong_words": [],
+                "most_common_wrong_sounds": []
+            }
+        
+        total = len(self.user_data)
+        correct = sum(1 for entry in self.user_data if entry.get("result", False))
+        accuracy_rate = (correct / total) * 100 if total > 0 else 0
+        
+        # Thống kê từ sai nhiều nhất
+        wrong_words_count = {}
+        wrong_sounds_count = {}
+        
+        for entry in self.user_data:
+            for wrong_word in entry.get("wrong_words", []):
+                word = wrong_word.get("word", "")
+                if word:
+                    wrong_words_count[word] = wrong_words_count.get(word, 0) + 1
+                
+                for sound in wrong_word.get("wrong_ipa", []):
+                    wrong_sounds_count[sound] = wrong_sounds_count.get(sound, 0) + 1
+        
+        # Sắp xếp theo tần suất
+        most_common_words = sorted(wrong_words_count.items(), key=lambda x: x[1], reverse=True)[:10]
+        most_common_sounds = sorted(wrong_sounds_count.items(), key=lambda x: x[1], reverse=True)[:10]
+        
+        return {
+            "total_assessments": total,
+            "correct_assessments": correct,
+            "accuracy_rate": round(accuracy_rate, 2),
+            "most_common_wrong_words": most_common_words,
+            "most_common_wrong_sounds": most_common_sounds
+        }
+    
+    def print_user_statistics(self):
+        """In thống kê user ra console"""
+        stats = self.get_user_statistics()
+        
+        print("\n" + "="*50)
+        print("📊 THỐNG KÊ PHÁT ÂM CỦA USER")
+        print("="*50)
+        print(f"Tổng số lần kiểm tra: {stats['total_assessments']}")
+        print(f"Số lần đúng: {stats['correct_assessments']}")
+        print(f"Tỷ lệ chính xác: {stats['accuracy_rate']}%")
+        print()
+        
+        if stats['most_common_wrong_words']:
+            print("🔴 Từ phát âm sai nhiều nhất:")
+            for word, count in stats['most_common_wrong_words']:
+                print(f"   • {word}: {count} lần")
+            print()
+        
+        if stats['most_common_wrong_sounds']:
+            print("🔴 Âm IPA sai nhiều nhất:")
+            for sound, count in stats['most_common_wrong_sounds']:
+                print(f"   • /{sound}/: {count} lần")
+        
+        print("="*50)
 
 
-def assess_pronunciation(original_text: str, spoken_text: str) -> str:
+def assess_pronunciation(original_text: str, spoken_text: str, save_result: bool = True) -> str:
     """
     Hàm wrapper để dễ import và sử dụng
     
     Args:
         original_text: Câu/từ gốc
         spoken_text: Kết quả từ Speech-to-Text
+        save_result: Có lưu kết quả vào user-data.yaml không
         
     Returns:
         str: Kết quả đánh giá chi tiết
     """
     assessor = PronunciationAssessment()
-    return assessor.assess_pronunciation(original_text, spoken_text)
+    return assessor.assess_pronunciation(original_text, spoken_text, save_result)
 
 
 def main():
     """Chương trình chính để test"""
     print("=== Pronunciation Assessment Tool ===")
     print()
+    
+    assessor = PronunciationAssessment()
     
     # Test cases
     test_cases = [
@@ -302,32 +476,53 @@ def main():
         ("Good morning", "Good morening"),
     ]
     
+    print("🧪 Running test cases...")
     for i, (original, spoken) in enumerate(test_cases, 1):
-        print(f"Test {i}:")
+        print(f"\nTest {i}:")
         print(f"Original: {original}")
         print(f"Spoken:   {spoken}")
         print()
         
-        result = assess_pronunciation(original, spoken)
+        result = assessor.assess_pronunciation(original, spoken)
         print(result)
         print("="*60)
-        print()
+    
+    # Hiển thị thống kê
+    assessor.print_user_statistics()
     
     # Interactive mode
     while True:
-        print("\n🎤 Interactive Mode (press Enter twice to exit)")
-        original = input("Enter original text: ").strip()
-        if not original:
+        print("\n🎤 Interactive Mode")
+        print("Options:")
+        print("1. Assess pronunciation")
+        print("2. View statistics")
+        print("3. Exit")
+        
+        choice = input("Choose option (1-3): ").strip()
+        
+        if choice == '1':
+            original = input("\nEnter original text: ").strip()
+            if not original:
+                continue
+                
+            spoken = input("Enter spoken text (from Speech-to-Text): ").strip()
+            if not spoken:
+                continue
+                
+            print("\n" + "="*50)
+            result = assessor.assess_pronunciation(original, spoken)
+            print(result)
+            print("="*50)
+            
+        elif choice == '2':
+            assessor.print_user_statistics()
+            
+        elif choice == '3':
+            print("Goodbye!")
             break
             
-        spoken = input("Enter spoken text (from Speech-to-Text): ").strip()
-        if not spoken:
-            break
-            
-        print("\n" + "="*50)
-        result = assess_pronunciation(original, spoken)
-        print(result)
-        print("="*50)
+        else:
+            print("Invalid choice. Please choose 1-3.")
 
 
 if __name__ == "__main__":
