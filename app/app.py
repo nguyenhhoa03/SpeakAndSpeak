@@ -312,6 +312,10 @@ class SpeakAndSpeakApp:
                                     command=self.generate_new_word)
         new_word_btn.pack(side="left", padx=5)
         
+        random_word_btn = ctk.CTkButton(control_frame, text="Random Again", 
+                                       command=self.generate_new_word)
+        random_word_btn.pack(side="left", padx=5)
+        
         listen_btn = ctk.CTkButton(control_frame, text="Listen", 
                                   command=lambda: self.tts_engine.speak(self.current_word))
         listen_btn.pack(side="left", padx=5)
@@ -347,6 +351,10 @@ class SpeakAndSpeakApp:
         new_sentence_btn = ctk.CTkButton(control_frame, text="New Sentence", 
                                         command=self.generate_new_sentence)
         new_sentence_btn.pack(side="left", padx=5)
+        
+        random_sentence_btn = ctk.CTkButton(control_frame, text="Random Again", 
+                                           command=self.generate_new_sentence)
+        random_sentence_btn.pack(side="left", padx=5)
         
         listen_btn = ctk.CTkButton(control_frame, text="Listen", 
                                   command=lambda: self.tts_engine.speak(self.current_sentence))
