@@ -6,17 +6,17 @@ A script that generates sentences based on user performance analysis.
 Can be run standalone or imported into other scripts.
 
 Requirements:
-- wonderwords
 - eng-to-ipa
 - PyYAML
 
-Install with: pip install wonderwords eng-to-ipa PyYAML
+Install with: pip install eng-to-ipa PyYAML
 """
 
 import yaml
 import random
+import csv
+import os
 from collections import Counter
-from wonderwords import RandomSentence
 from eng_to_ipa import ipa_list
 
 
@@ -61,14 +61,136 @@ def analyze_last_20_nodes(data):
     return Counter(wrong_ipa_sounds), error_rate
 
 
-def generate_random_sentences_with_ipa(count=30):
-    """Generate random sentences and convert words to IPA."""
-    r = RandomSentence()
+def get_file_line_count(file_path):
+    """Get total number of lines in file efficiently."""
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            return sum(1 for line in f)
+    except:
+        return 1991044  # Default known count
+
+
+def get_random_sentence_from_file(file_path="eng_sentences.tsv"):
+    """
+    Get a random sentence from TSV file efficiently without loading entire file.
+    
+    Args:
+        file_path: Path to the TSV file
+    
+    Returns:
+        str: Random sentence from column C (3rd column)
+    """
+    if not os.path.exists(file_path):
+        print(f"Warning: {file_path} not found. Using fallback sentence.")
+        return "This is a fallback sentence for testing purposes."
+    
+    try:
+        # Get total line count (cache this if called frequently)
+        if not hasattr(get_random_sentence_from_file, 'line_count'):
+            print("Counting lines in TSV file...")
+            get_random_sentence_from_file.line_count = get_file_line_count(file_path)
+            print(f"File has {get_random_sentence_from_file.line_count} lines")
+        
+        # Generate random line number
+        random_line = random.randint(1, get_random_sentence_from_file.line_count)
+        
+        # Read the specific line
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for i, line in enumerate(f, 1):
+                if i == random_line:
+                    try:
+                        # Parse TSV line and get column C (index 2)
+                        columns = line.strip().split('\t')
+                        if len(columns) >= 3 and columns[2].strip():
+                            return columns[2].strip()
+                        else:
+                            # If column C is empty, try again with another random line
+                            return get_random_sentence_from_file(file_path)
+                    except:
+                        # If parsing fails, try another random line
+                        return get_random_sentence_from_file(file_path)
+        
+        # Fallback if we somehow don't find the line
+        return "This is a fallback sentence."
+        
+    except Exception as e:
+        print(f"Error reading from {file_path}: {e}")
+        return "This is a fallback sentence due to file reading error."
+
+
+def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30):
+    """
+    Get multiple random sentences from TSV file efficiently.
+    
+    Args:
+        file_path: Path to the TSV file
+        count: Number of sentences to retrieve
+    
+    Returns:
+        list: List of random sentences
+    """
+    if not os.path.exists(file_path):
+        print(f"Warning: {file_path} not found. Using fallback sentences.")
+        return [f"This is fallback sentence number {i+1}." for i in range(count)]
+    
+    try:
+        # Get total line count
+        if not hasattr(get_multiple_random_sentences, 'line_count'):
+            print("Counting lines in TSV file...")
+            get_multiple_random_sentences.line_count = get_file_line_count(file_path)
+            print(f"File has {get_multiple_random_sentences.line_count} lines")
+        
+        total_lines = get_multiple_random_sentences.line_count
+        
+        # Generate multiple random line numbers
+        random_lines = sorted(random.sample(range(1, total_lines + 1), min(count * 3, total_lines)))
+        
+        sentences = []
+        current_target = 0
+        
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for i, line in enumerate(f, 1):
+                if current_target < len(random_lines) and i == random_lines[current_target]:
+                    try:
+                        # Parse TSV line and get column C (index 2)
+                        columns = line.strip().split('\t')
+                        if len(columns) >= 3 and columns[2].strip():
+                            sentence = columns[2].strip()
+                            # Basic sentence validation
+                            if len(sentence) > 10 and len(sentence) < 200:
+                                sentences.append(sentence)
+                                if len(sentences) >= count:
+                                    break
+                    except:
+                        pass
+                    current_target += 1
+        
+        # If we didn't get enough sentences, fill with additional random picks
+        while len(sentences) < count:
+            try:
+                additional = get_random_sentence_from_file(file_path)
+                if additional not in sentences and len(additional) > 10:
+                    sentences.append(additional)
+            except:
+                break
+        
+        return sentences[:count]
+        
+    except Exception as e:
+        print(f"Error reading multiple sentences from {file_path}: {e}")
+        return [f"Fallback sentence {i+1} due to file reading error." for i in range(count)]
+
+
+def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
+    """Generate random sentences from TSV file and convert words to IPA."""
     sentences_with_ipa = []
     
-    for _ in range(count):
+    # Get random sentences from file
+    sentences = get_multiple_random_sentences(file_path, count)
+    print(f"Retrieved {len(sentences)} sentences from file")
+    
+    for sentence in sentences:
         try:
-            sentence = r.sentence()
             # Convert sentence to word-IPA pairs
             words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()
             word_ipa_pairs = []
@@ -168,12 +290,13 @@ def select_best_sentences(sentences_with_ipa, target_ipa_frequencies, top_n=10):
     return scored_sentences[:top_n]
 
 
-def generate_sentence(file_path="user-data.yaml"):
+def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.tsv"):
     """
     Main function to generate a sentence based on user performance analysis.
     
     Args:
         file_path: Path to user data YAML file
+        tsv_file_path: Path to TSV sentences file
     
     Returns:
         str: Generated sentence
@@ -194,21 +317,19 @@ def generate_sentence(file_path="user-data.yaml"):
     if not use_non_random or not wrong_ipa_counter:
         # Generate truly random sentence
         print("Generating truly random sentence...")
-        r = RandomSentence()
-        return r.sentence()
+        return get_random_sentence_from_file(tsv_file_path)
     
     else:
         # Generate non-random sentence based on wrong IPA sounds
         print("Generating non-random sentence based on error patterns...")
         
         # Generate 30 random sentences with IPA
-        sentences_with_ipa = generate_random_sentences_with_ipa(30)
+        sentences_with_ipa = generate_random_sentences_with_ipa(30, tsv_file_path)
         print(f"Generated {len(sentences_with_ipa)} sentences with IPA")
         
         if not sentences_with_ipa:
             # Fallback to random sentence if IPA conversion fails
-            r = RandomSentence()
-            return r.sentence()
+            return get_random_sentence_from_file(tsv_file_path)
         
         # Select best sentences based on IPA sound matching
         best_sentences = select_best_sentences(sentences_with_ipa, wrong_ipa_counter)
