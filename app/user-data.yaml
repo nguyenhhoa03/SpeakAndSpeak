@@ -1,0 +1,15 @@
+- result: false
+  sentence: migration
+  wrong_words: []
+- result: false
+  sentence: ambulance
+  wrong_words: []
+- result: false
+  sentence: expensive
+  wrong_words: []
+- result: false
+  sentence: grandmother
+  wrong_words: []
+- result: false
+  sentence: command
+  wrong_words: []

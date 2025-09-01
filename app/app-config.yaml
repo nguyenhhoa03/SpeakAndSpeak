@@ -1,0 +1,12 @@
+color_scheme:
+  available:
+  - blue
+  - green
+  - dark-blue
+  current: green
+theme:
+  available:
+  - light
+  - dark
+  - system
+  current: system

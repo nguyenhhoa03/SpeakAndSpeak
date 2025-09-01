@@ -1,0 +1,116 @@
+# user-data.yaml
+- sentence: "The quick brown fox jumps over the lazy dog."
+  result: false
+  wrong_words:
+    - word: "quick"
+      wrong_ipa: ["ɪ", "k"]
+    - word: "lazy"
+      wrong_ipa: ["æ"]
+
+- sentence: "I would like a cup of coffee, please."
+  result: true
+  wrong_words: []
+
+- sentence: "She sells seashells by the seashore."
+  result: false
+  wrong_words:
+    - word: "seashells"
+      wrong_ipa: ["ʃ", "ɛ"]
+    - word: "seashore"
+      wrong_ipa: ["ɔː"]
+
+- sentence: "They are going to the cinema tonight."
+  result: false
+  wrong_words:
+    - word: "the"
+      wrong_ipa: ["ð", "ə"]
+
+- sentence: "My favorite color is blue."
+  result: true
+  wrong_words: []
+
+- sentence: "Can you pass me the salt, please?"
+  result: false
+  wrong_words:
+    - word: "salt"
+      wrong_ipa: ["s", "ɔ"]
+
+- sentence: "It's raining cats and dogs outside."
+  result: false
+  wrong_words:
+    - word: "raining"
+      wrong_ipa: ["r"]
+    - word: "dogs"
+      wrong_ipa: ["ɒ"]
+
+- sentence: "I have never seen a shooting star."
+  result: true
+  wrong_words: []
+
+- sentence: "This restaurant serves delicious food."
+  result: false
+  wrong_words:
+    - word: "restaurant"
+      wrong_ipa: ["ˈrɛs", "tər"]
+    - word: "delicious"
+      wrong_ipa: ["ɪ"]
+
+- sentence: "We will travel to Japan next summer."
+  result: true
+  wrong_words: []
+
+- sentence: "Please write your name on the paper."
+  result: false
+  wrong_words:
+    - word: "paper"
+      wrong_ipa: ["eɪ"]
+
+- sentence: "He always wakes up early in the morning."
+  result: false
+  wrong_words:
+    - word: "always"
+      wrong_ipa: ["ɔː"]
+    - word: "morning"
+      wrong_ipa: ["ŋ"]
+
+- sentence: "This book is very interesting."
+  result: true
+  wrong_words: []
+
+- sentence: "My brother likes to play the guitar."
+  result: false
+  wrong_words:
+    - word: "guitar"
+      wrong_ipa: ["ɡɪ"]
+
+- sentence: "She bought a beautiful dress yesterday."
+  result: false
+  wrong_words:
+    - word: "beautiful"
+      wrong_ipa: ["juː"]
+
+- sentence: "Do you know where my keys are?"
+  result: true
+  wrong_words: []
+
+- sentence: "There are many flowers in the garden."
+  result: false
+  wrong_words:
+    - word: "flowers"
+      wrong_ipa: ["aʊ"]
+
+- sentence: "We should leave before it gets dark."
+  result: false
+  wrong_words:
+    - word: "leave"
+      wrong_ipa: ["iː"]
+
+- sentence: "The train is arriving at platform three."
+  result: true
+  wrong_words: []
+
+- sentence: "Could you help me carry these bags?"
+  result: false
+  wrong_words:
+    - word: "carry"
+      wrong_ipa: ["æ"]
