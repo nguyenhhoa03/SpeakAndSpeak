@@ -45,6 +45,9 @@ pip install -r requirements.txt
 **Lưu ý:**
 *   `vosk` yêu cầu một mô hình ngôn ngữ. Dự án này sử dụng `vosk-model-en-us-0.22-lgraph`, bạn cần đảm bảo thư mục này nằm cùng cấp với các tệp mã nguồn.
 
+## 3. Tải toàn bộ mã nguồn
+[Mega Mirror](https://mega.nz/file/gWFBGYhS#ViSJ4WtUYNDMWOxJlaVbL8acinGsAk0UbPNMFDb07Sc)
+
 ## Cách sử dụng
 
 1.  **Chạy ứng dụng:**
