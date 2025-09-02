@@ -63,4 +63,9 @@ pip install -r requirements.txt
 
 Dự án này được cấp phép theo Giấy phép Công cộng GNU (GNU General Public License) phiên bản 3.0. Xem chi tiết tại [Trang chủ điều khoản](https://www.gnu.org/licenses/gpl-3.0.en.html) (hoặc tệp [LICENSE](https://github.com/nguyenhhoa03/SpeakAndSpeak/blob/main/LICENSE) trong kho lưu trữ này).
 
-Lưu ý:`welcome.png` và `about.png` được sử dụng có nguồn gốc từ [Fandom](https://genshin-impact.fandom.com/wiki/Chat/Gallery) với giấy phép [CC BY-SA](https://www.fandom.com/licensing)
+### Tài nguyên bên thứ 3
+| Tài nguyên | Nguồn gốc | Giấy phép | Ghi chú |
+|------------|-----------|-----------|---------|
+| about.png | [Fandom](https://genshin-impact.fandom.com/wiki/Chat/Gallery) | [CC BY-SA](https://www.fandom.com/licensing) | Không cần thay thế |
+| vosk-model-en-us-0.22-lgraph | [Alphacephei](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) | [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) | Cần thay thế bằng thư mục gốc |
+| eng_sentences.tsv | [Tatoeba](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) | [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/) & [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Cần thay thế bằng file gốc |
