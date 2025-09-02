@@ -39,6 +39,7 @@ class SpeakAndSpeakApp:
         self.current_word = ""
         self.current_sentence = ""
         self.is_recording = False
+        self.progress_timer = None
         
         # Tạo giao diện
         self.create_widgets()
@@ -101,7 +102,7 @@ class SpeakAndSpeakApp:
         main_frame = ctk.CTkFrame(self.welcome_tab)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Hiển thị ảnh welcome
+        # Hiển thị ảnh welcome hoặc icon
         try:
             welcome_img = Image.open("welcome.png")
             welcome_w, welcome_h = welcome_img.size
@@ -112,15 +113,15 @@ class SpeakAndSpeakApp:
             image_label = ctk.CTkLabel(main_frame, image=welcome_image, text="")
             image_label.pack(pady=(50, 20))
         except FileNotFoundError:
-            # Placeholder nếu không có ảnh
-            placeholder_label = ctk.CTkLabel(
+            # Icon 🪶 to thay thế ảnh
+            icon_label = ctk.CTkLabel(
                 main_frame, 
-                text="Welcome Image\n(welcome.png not found)",
-                font=ctk.CTkFont(size=20),
+                text="🪶",
+                font=ctk.CTkFont(size=120),
                 width=300,
                 height=200
             )
-            placeholder_label.pack(pady=(50, 20))
+            icon_label.pack(pady=(50, 20))
         
         # Welcome text
         welcome_label = ctk.CTkLabel(
@@ -213,12 +214,9 @@ class SpeakAndSpeakApp:
         self.word_status = ctk.CTkLabel(main_frame, text="", font=ctk.CTkFont(size=14))
         self.word_status.pack(pady=10)
         
-        # Result text area
-        self.word_result_frame = ctk.CTkScrollableFrame(main_frame, width=750, height=250)
-        self.word_result_frame.pack(fill="both", expand=True, pady=20)
-        
-        self.word_result_text = ctk.CTkTextbox(self.word_result_frame, wrap="word")
-        self.word_result_text.pack(fill="both", expand=True)
+        # Result text area - Hiển thị trực tiếp không có thanh cuộn
+        self.word_result_text = ctk.CTkTextbox(main_frame, wrap="word", width=750, height=300)
+        self.word_result_text.pack(fill="x", pady=20)
     
     def setup_sentence_tab(self):
         """Setup tab Sentence"""
@@ -278,12 +276,15 @@ class SpeakAndSpeakApp:
         self.sentence_status = ctk.CTkLabel(main_frame, text="", font=ctk.CTkFont(size=14))
         self.sentence_status.pack(pady=10)
         
-        # Result text area
-        self.sentence_result_frame = ctk.CTkScrollableFrame(main_frame, width=750, height=250)
-        self.sentence_result_frame.pack(fill="both", expand=True, pady=20)
-        
-        self.sentence_result_text = ctk.CTkTextbox(self.sentence_result_frame, wrap="word")
-        self.sentence_result_text.pack(fill="both", expand=True)
+        # Result text area - Không cần ScrollableFrame, dùng CTkTextbox trực tiếp
+        self.sentence_result_text = ctk.CTkTextbox(
+            main_frame,
+            wrap="word",
+            width=750,
+            height=300  # hoặc tăng chiều cao tùy ý
+        )
+        self.sentence_result_text.pack(fill="both", expand=True, pady=20)
+
     
     def setup_statistics_tab(self):
         """Setup tab Statistics"""
@@ -305,12 +306,15 @@ class SpeakAndSpeakApp:
         self.stats_status = ctk.CTkLabel(main_frame, text="", font=ctk.CTkFont(size=14))
         self.stats_status.pack(pady=10)
         
-        # Result text area
-        self.stats_result_frame = ctk.CTkScrollableFrame(main_frame, width=750, height=500)
-        self.stats_result_frame.pack(fill="both", expand=True, pady=20)
-        
-        self.stats_result_text = ctk.CTkTextbox(self.stats_result_frame, wrap="word")
-        self.stats_result_text.pack(fill="both", expand=True)
+        # Result text area - Sửa lại cho đơn giản
+        self.stats_result_text = ctk.CTkTextbox(
+            main_frame,
+            wrap="word",
+            width=750,
+            height=500
+        )
+        self.stats_result_text.pack(fill="both", expand=True, pady=20)
+
     
     def setup_settings_tab(self):
         """Setup tab Settings"""
@@ -419,35 +423,120 @@ class SpeakAndSpeakApp:
         github_link.pack(pady=20)
         github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/nguyenhhoa03/SpeakAndSpeak"))
     
+    def start_fake_progress(self, progress_bar, interval=1.0):
+        """Bắt đầu thanh tiến trình giả"""
+        if self.progress_timer:
+            self.progress_timer.cancel()
+        
+        current_progress = 0.0
+        remaining = 1.0
+        
+        def update_progress():
+            nonlocal current_progress, remaining
+            if remaining > 0.01:  # Chỉ cập nhật nếu còn đủ để chia
+                increment = remaining * 0.3
+                current_progress += increment
+                remaining -= increment
+                progress_bar.set(current_progress)
+                
+                # Lên lịch cập nhật tiếp theo
+                self.progress_timer = threading.Timer(interval, update_progress)
+                self.progress_timer.start()
+        
+        update_progress()
+    
+    def complete_progress(self, progress_bar):
+        """Hoàn thành thanh tiến trình"""
+        if self.progress_timer:
+            self.progress_timer.cancel()
+            self.progress_timer = None
+        progress_bar.set(1.0)
+        # Reset về 0 sau 0.5 giây
+        threading.Timer(0.5, lambda: progress_bar.set(0)).start()
+    
     def generate_random_word(self):
         """Tạo từ ngẫu nhiên"""
         try:
-            self.current_word = generate_word("user-data.yaml")
-            self.word_label.configure(text=self.current_word)
-            self.word_result_text.delete("1.0", "end")
+            self.word_status.configure(text="Generating word...")
+            self.start_fake_progress(self.word_progress, interval=1.0)  # 1s cho word
+            
+            def generate_word_thread():
+                try:
+                    word = generate_word("user-data.yaml")
+                    self.root.after(0, lambda: self._update_word_generated(word))
+                except Exception as e:
+                    self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate word: {str(e)}"))
+                finally:
+                    self.root.after(0, lambda: self.complete_progress(self.word_progress))
+                    self.root.after(0, lambda: self.word_status.configure(text=""))
+            
+            threading.Thread(target=generate_word_thread).start()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate word: {str(e)}")
+    
+    def _update_word_generated(self, word):
+        """Cập nhật từ được tạo"""
+        self.current_word = word
+        self.word_label.configure(text=self.current_word)
+        self.word_result_text.delete("1.0", "end")
     
     def generate_random_sentence(self):
         """Tạo câu ngẫu nhiên"""
         try:
-            self.current_sentence = generate_sentence("user-data.yaml")
-            self.sentence_label.configure(text=self.current_sentence)
-            self.sentence_result_text.delete("1.0", "end")
+            self.sentence_status.configure(text="Generating sentence...")
+            self.start_fake_progress(self.sentence_progress, interval=2.0)  # 2s cho sentence
+            
+            def generate_sentence_thread():
+                try:
+                    sentence = generate_sentence("user-data.yaml")
+                    self.root.after(0, lambda: self._update_sentence_generated(sentence))
+                except Exception as e:
+                    self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate sentence: {str(e)}"))
+                finally:
+                    self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
+                    self.root.after(0, lambda: self.sentence_status.configure(text=""))
+            
+            threading.Thread(target=generate_sentence_thread).start()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate sentence: {str(e)}")
+    
+    def _update_sentence_generated(self, sentence):
+        """Cập nhật câu được tạo"""
+        self.current_sentence = sentence
+        self.sentence_label.configure(text=self.current_sentence)
+        self.sentence_result_text.delete("1.0", "end")
     
     def speak_word(self):
         """Phát âm từ"""
         if self.current_word:
-            threading.Thread(target=self._speak_text, args=(self.current_word,)).start()
+            self.word_status.configure(text="Speaking...")
+            self.start_fake_progress(self.word_progress, interval=1.0)
+            
+            def speak_thread():
+                try:
+                    self._speak_text(self.current_word)
+                finally:
+                    self.root.after(0, lambda: self.complete_progress(self.word_progress))
+                    self.root.after(0, lambda: self.word_status.configure(text=""))
+            
+            threading.Thread(target=speak_thread).start()
         else:
             messagebox.showwarning("Warning", "Please generate a word first!")
     
     def speak_sentence(self):
         """Phát âm câu"""
         if self.current_sentence:
-            threading.Thread(target=self._speak_text, args=(self.current_sentence,)).start()
+            self.sentence_status.configure(text="Speaking...")
+            self.start_fake_progress(self.sentence_progress, interval=2.0)
+            
+            def speak_thread():
+                try:
+                    self._speak_text(self.current_sentence)
+                finally:
+                    self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
+                    self.root.after(0, lambda: self.sentence_status.configure(text=""))
+            
+            threading.Thread(target=speak_thread).start()
         else:
             messagebox.showwarning("Warning", "Please generate a sentence first!")
     
@@ -525,6 +614,7 @@ class SpeakAndSpeakApp:
     def process_word_recording(self):
         """Xử lý ghi âm từ"""
         self.word_status.configure(text="Đang xử lý...")
+        self.start_fake_progress(self.word_progress, interval=1.0)
         threading.Thread(target=self._process_word_audio).start()
     
     def _process_word_audio(self):
@@ -538,10 +628,12 @@ class SpeakAndSpeakApp:
             
             # Update UI
             self.root.after(0, lambda: self._update_word_result(result))
+            self.root.after(0, lambda: self.complete_progress(self.word_progress))
             self.root.after(0, lambda: self.word_status.configure(text="Processing completed!"))
             
         except Exception as e:
             error_msg = f"Error: {e}"
+            self.root.after(0, lambda: self.complete_progress(self.word_progress))
             self.root.after(0, lambda msg=error_msg: self.word_status.configure(text=msg))
     
     def _update_word_result(self, result):
@@ -552,6 +644,7 @@ class SpeakAndSpeakApp:
     def process_sentence_recording(self):
         """Xử lý ghi âm câu"""
         self.sentence_status.configure(text="Đang xử lý...")
+        self.start_fake_progress(self.sentence_progress, interval=2.0)
         threading.Thread(target=self._process_sentence_audio).start()
     
     def _process_sentence_audio(self):
@@ -565,10 +658,12 @@ class SpeakAndSpeakApp:
             
             # Update UI
             self.root.after(0, lambda: self._update_sentence_result(result))
+            self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
             self.root.after(0, lambda: self.sentence_status.configure(text="Processing completed!"))
             
         except Exception as e:
             error_msg = f"Error: {e}"
+            self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
             self.root.after(0, lambda msg=error_msg: self.sentence_status.configure(text=msg))
     
     def _update_sentence_result(self, result):

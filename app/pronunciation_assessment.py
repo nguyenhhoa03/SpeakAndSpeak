@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Pronunciation Assessment Tool
 
@@ -364,7 +365,7 @@ class PronunciationAssessment:
         return "\n".join(result)
     
     def _create_marked_sentence(self, original_text: str) -> str:
-        """Tạo câu được đánh dấu với từ sai"""
+        """Tạo câu được đánh dấu với từ sai (sử dụng một dấu * ở cuối từ)"""
         words = original_text.split()
         error_words = {error.word.lower() for error in self.word_errors}
         
@@ -372,7 +373,7 @@ class PronunciationAssessment:
         for word in words:
             clean_word = re.sub(r'[^\w]', '', word.lower())
             if clean_word in error_words:
-                marked_words.append(f"**{word}**")
+                marked_words.append(f"{word}*")
             else:
                 marked_words.append(word)
         
