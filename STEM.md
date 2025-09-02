@@ -4,7 +4,7 @@
 
 * **Tên dự án:** Speak\&Speak
 * **Học sinh thực hiện:** Nguyễn Hữu Hòa – Lớp 11L
-* **Giáo viên hướng dẫn:** Nguyễn Hữu Hợp – Bộ môn Tin học
+* **Giáo viên hướng dẫn:**  Thầy Nguyễn Hữu Hợp – Bộ môn Tin học
 
 ---
 
