@@ -69,4 +69,3 @@ Dự án này được cấp phép theo Giấy phép Công cộng GNU (GNU Gener
 | vosk-model-en-us-0.22-lgraph | [Alphacephei](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) | [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) | Cần thay thế bằng thư mục gốc |
 | eng_sentences.tsv | [Tatoeba](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) | [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/) & [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Cần thay thế bằng file gốc |
 | sox-14.4.2rc2-win32.exe | [Sourceforge](https://sourceforge.net/projects/sox/) | [GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html) & [LGPLv2](https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html) | Không cần thay thế |
-| welcome.png | [Lucide](https://lucide.dev/icons/graduation-cap) | [ISC](https://opensource.org/license/isc-license-txt) | Có thể thay thế |
