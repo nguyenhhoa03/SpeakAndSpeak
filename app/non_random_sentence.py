@@ -16,6 +16,7 @@ import yaml
 import random
 import csv
 import os
+import re
 from collections import Counter
 from eng_to_ipa import ipa_list
 
@@ -70,15 +71,22 @@ def get_file_line_count(file_path):
         return 1991044  # Default known count
 
 
-def get_random_sentence_from_file(file_path="eng_sentences.tsv"):
+def has_numbers(sentence):
+    """Check if sentence contains any numbers (digits)."""
+    return bool(re.search(r'\d', sentence))
+
+
+def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10):
     """
     Get a random sentence from TSV file efficiently without loading entire file.
+    Skip sentences containing numbers.
     
     Args:
         file_path: Path to the TSV file
+        max_attempts: Maximum attempts to find a sentence without numbers
     
     Returns:
-        str: Random sentence from column C (3rd column)
+        str: Random sentence from column C (3rd column) without numbers
     """
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentence.")
@@ -91,47 +99,57 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv"):
             get_random_sentence_from_file.line_count = get_file_line_count(file_path)
             print(f"File has {get_random_sentence_from_file.line_count} lines")
         
-        # Generate random line number
-        random_line = random.randint(1, get_random_sentence_from_file.line_count)
+        total_lines = get_random_sentence_from_file.line_count
         
-        # Read the specific line
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            for i, line in enumerate(f, 1):
-                if i == random_line:
-                    try:
-                        # Parse TSV line and get column C (index 2)
-                        columns = line.strip().split('\t')
-                        if len(columns) >= 3 and columns[2].strip():
-                            return columns[2].strip()
-                        else:
-                            # If column C is empty, try again with another random line
-                            return get_random_sentence_from_file(file_path)
-                    except:
-                        # If parsing fails, try another random line
-                        return get_random_sentence_from_file(file_path)
+        # Try multiple times to find a sentence without numbers
+        for attempt in range(max_attempts):
+            # Generate random line number
+            random_line = random.randint(1, total_lines)
+            
+            # Read the specific line
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                for i, line in enumerate(f, 1):
+                    if i == random_line:
+                        try:
+                            # Parse TSV line and get column C (index 2)
+                            columns = line.strip().split('\t')
+                            if len(columns) >= 3 and columns[2].strip():
+                                sentence = columns[2].strip()
+                                # Check if sentence contains numbers
+                                if not has_numbers(sentence):
+                                    return sentence
+                                # If sentence has numbers, break and try another random line
+                                break
+                        except:
+                            # If parsing fails, try another random line
+                            break
         
-        # Fallback if we somehow don't find the line
-        return "This is a fallback sentence."
+        # If we couldn't find a sentence without numbers after max_attempts,
+        # return a fallback sentence
+        print(f"Warning: Could not find sentence without numbers after {max_attempts} attempts")
+        return "This is a fallback sentence without any numbers."
         
     except Exception as e:
         print(f"Error reading from {file_path}: {e}")
         return "This is a fallback sentence due to file reading error."
 
 
-def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30):
+def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_attempts=100):
     """
     Get multiple random sentences from TSV file efficiently.
+    Skip sentences containing numbers.
     
     Args:
         file_path: Path to the TSV file
         count: Number of sentences to retrieve
+        max_attempts: Maximum attempts to find sentences without numbers
     
     Returns:
-        list: List of random sentences
+        list: List of random sentences without numbers
     """
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentences.")
-        return [f"This is fallback sentence number {i+1}." for i in range(count)]
+        return [f"This is fallback sentence number {i+1} without numbers." for i in range(count)]
     
     try:
         # Get total line count
@@ -142,22 +160,28 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30):
         
         total_lines = get_multiple_random_sentences.line_count
         
-        # Generate multiple random line numbers
-        random_lines = sorted(random.sample(range(1, total_lines + 1), min(count * 3, total_lines)))
+        # Generate more random line numbers than needed to account for skipped sentences
+        random_lines = sorted(random.sample(range(1, total_lines + 1), min(count * 5, total_lines)))
         
         sentences = []
         current_target = 0
+        attempts = 0
         
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for i, line in enumerate(f, 1):
                 if current_target < len(random_lines) and i == random_lines[current_target]:
+                    attempts += 1
+                    if attempts > max_attempts:
+                        break
+                        
                     try:
                         # Parse TSV line and get column C (index 2)
                         columns = line.strip().split('\t')
                         if len(columns) >= 3 and columns[2].strip():
                             sentence = columns[2].strip()
-                            # Basic sentence validation
-                            if len(sentence) > 10 and len(sentence) < 200:
+                            # Basic sentence validation and number check
+                            if (len(sentence) > 10 and len(sentence) < 200 and 
+                                not has_numbers(sentence)):
                                 sentences.append(sentence)
                                 if len(sentences) >= count:
                                     break
@@ -166,13 +190,20 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30):
                     current_target += 1
         
         # If we didn't get enough sentences, fill with additional random picks
-        while len(sentences) < count:
+        additional_attempts = 0
+        while len(sentences) < count and additional_attempts < max_attempts:
             try:
-                additional = get_random_sentence_from_file(file_path)
-                if additional not in sentences and len(additional) > 10:
+                additional = get_random_sentence_from_file(file_path, max_attempts=5)
+                if (additional not in sentences and len(additional) > 10 and 
+                    not has_numbers(additional)):
                     sentences.append(additional)
+                additional_attempts += 1
             except:
                 break
+        
+        # If still not enough sentences, pad with fallback sentences
+        while len(sentences) < count:
+            sentences.append(f"This is fallback sentence {len(sentences) + 1} without numbers.")
         
         return sentences[:count]
         
@@ -182,12 +213,13 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30):
 
 
 def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
-    """Generate random sentences from TSV file and convert words to IPA."""
+    """Generate random sentences from TSV file and convert words to IPA.
+    Skip sentences containing numbers."""
     sentences_with_ipa = []
     
-    # Get random sentences from file
+    # Get random sentences from file (already filtered for numbers)
     sentences = get_multiple_random_sentences(file_path, count)
-    print(f"Retrieved {len(sentences)} sentences from file")
+    print(f"Retrieved {len(sentences)} sentences from file (no numbers)")
     
     for sentence in sentences:
         try:
@@ -299,7 +331,7 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
         tsv_file_path: Path to TSV sentences file
     
     Returns:
-        str: Generated sentence
+        str: Generated sentence without numbers
     """
     # Load user data
     data = load_user_data(file_path)
@@ -315,7 +347,7 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
     use_non_random = random.random() * 100 < error_rate
     
     if not use_non_random or not wrong_ipa_counter:
-        # Generate truly random sentence
+        # Generate truly random sentence (without numbers)
         print("Generating truly random sentence...")
         return get_random_sentence_from_file(tsv_file_path)
     
@@ -323,9 +355,9 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
         # Generate non-random sentence based on wrong IPA sounds
         print("Generating non-random sentence based on error patterns...")
         
-        # Generate 30 random sentences with IPA
+        # Generate 30 random sentences with IPA (already filtered for numbers)
         sentences_with_ipa = generate_random_sentences_with_ipa(30, tsv_file_path)
-        print(f"Generated {len(sentences_with_ipa)} sentences with IPA")
+        print(f"Generated {len(sentences_with_ipa)} sentences with IPA (no numbers)")
         
         if not sentences_with_ipa:
             # Fallback to random sentence if IPA conversion fails
@@ -361,11 +393,17 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
 
 def main():
     """Main function for standalone execution."""
-    print("=== Non-Random Sentence Generator ===")
+    print("=== Non-Random Sentence Generator (No Numbers) ===")
     
     try:
         sentence = generate_sentence()
         print(f"\nGenerated sentence: {sentence}")
+        
+        # Verify no numbers in the sentence
+        if has_numbers(sentence):
+            print("WARNING: Generated sentence contains numbers!")
+        else:
+            print("✓ Sentence contains no numbers")
         
         # Show IPA for words in the sentence (first few words)
         words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()[:5]
