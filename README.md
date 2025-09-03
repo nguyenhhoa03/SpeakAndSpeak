@@ -50,7 +50,7 @@ pip install -r requirements.txt
 
 1.  **Chạy ứng dụng:**
     ```bash
-    python app.py
+    cd SpeakAndSpeak/app && python3 app.py
     ```
 2.  **Chọn tab:**
     *   **Word:** Luyện phát âm từng từ. Nhấn "Random Word" để tạo từ mới, "Listen" để nghe phát âm chuẩn, và "Record" để ghi âm giọng của bạn.
