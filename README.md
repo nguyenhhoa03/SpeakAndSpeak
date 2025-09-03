@@ -34,7 +34,10 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
     sudo apt-get install sox libsox-fmt-all
     ```
 
-### 2. Cài đặt thư viện Python
+### 2. Tải toàn bộ mã nguồn
+[Mega Mirror](https://mega.nz/file/gWFBGYhS#ViSJ4WtUYNDMWOxJlaVbL8acinGsAk0UbPNMFDb07Sc) 
+
+### 3. Cài đặt thư viện Python
 
 Sử dụng `pip` để cài đặt các thư viện cần thiết từ `requirements.txt`:
 
@@ -42,11 +45,6 @@ Sử dụng `pip` để cài đặt các thư viện cần thiết từ `require
 pip install -r requirements.txt
 ```
 
-**Lưu ý:**
-*   `vosk` yêu cầu một mô hình ngôn ngữ. Dự án này sử dụng `vosk-model-en-us-0.22-lgraph`, bạn cần đảm bảo thư mục này nằm cùng cấp với các tệp mã nguồn.
-
-## 3. Tải toàn bộ mã nguồn
-[Mega Mirror](https://mega.nz/file/gWFBGYhS#ViSJ4WtUYNDMWOxJlaVbL8acinGsAk0UbPNMFDb07Sc)
 
 ## Cách sử dụng
 
