@@ -601,6 +601,8 @@ class SpeakAndSpeakApp:
             # Chờ cho đến khi phát xong
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
+            pygame.mixer.quit()
+            pygame.mixer.init()
             
             # Xóa file tạm thời
             try:
