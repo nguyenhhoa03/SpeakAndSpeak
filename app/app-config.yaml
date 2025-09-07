@@ -3,10 +3,10 @@ color_scheme:
   - blue
   - green
   - dark-blue
-  current: dark-blue
+  current: green
 theme:
   available:
   - light
   - dark
   - system
-  current: system
+  current: dark

@@ -10,6 +10,15 @@ import pyttsx3
 import webbrowser
 from PIL import Image
 import time
+import pygame
+import tempfile
+
+# Try import gTTS, nếu không có sẽ fallback về pyttsx3
+try:
+    from gtts import gTTS
+    GTTS_AVAILABLE = True
+except ImportError:
+    GTTS_AVAILABLE = False
 
 # Import các module đánh giá (không có fallback như yêu cầu)
 from non_random_word import generate_word
@@ -32,8 +41,11 @@ class SpeakAndSpeakApp:
         # Load config
         self.load_config()
         
-        # Khởi tạo TTS engine
+        # Khởi tạo TTS engine (pyttsx3 làm fallback)
         self.tts_engine = pyttsx3.init()
+        
+        # Initialize pygame mixer cho gTTS playback
+        pygame.mixer.init()
         
         # Variables
         self.current_word = ""
@@ -454,8 +466,8 @@ class SpeakAndSpeakApp:
         # Reset về 0 sau 0.5 giây
         threading.Timer(0.5, lambda: progress_bar.set(0)).start()
     
-    def generate_random_word(self):
-        """Tạo từ ngẫu nhiên"""
+    def generate_random_word(self, callback=None):
+        """Tạo từ ngẫu nhiên với callback tùy chọn"""
         try:
             self.word_status.configure(text="Generating word...")
             self.start_fake_progress(self.word_progress, interval=1.0)  # 1s cho word
@@ -463,7 +475,7 @@ class SpeakAndSpeakApp:
             def generate_word_thread():
                 try:
                     word = generate_word("user-data.yaml")
-                    self.root.after(0, lambda: self._update_word_generated(word))
+                    self.root.after(0, lambda: self._update_word_generated(word, callback))
                 except Exception as e:
                     self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate word: {str(e)}"))
                 finally:
@@ -474,14 +486,16 @@ class SpeakAndSpeakApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate word: {str(e)}")
     
-    def _update_word_generated(self, word):
-        """Cập nhật từ được tạo"""
+    def _update_word_generated(self, word, callback=None):
+        """Cập nhật từ được tạo và gọi callback nếu có"""
         self.current_word = word
         self.word_label.configure(text=self.current_word)
         self.word_result_text.delete("1.0", "end")
+        if callback:
+            callback()
     
-    def generate_random_sentence(self):
-        """Tạo câu ngẫu nhiên"""
+    def generate_random_sentence(self, callback=None):
+        """Tạo câu ngẫu nhiên với callback tùy chọn"""
         try:
             self.sentence_status.configure(text="Generating sentence...")
             self.start_fake_progress(self.sentence_progress, interval=2.0)  # 2s cho sentence
@@ -489,7 +503,7 @@ class SpeakAndSpeakApp:
             def generate_sentence_thread():
                 try:
                     sentence = generate_sentence("user-data.yaml")
-                    self.root.after(0, lambda: self._update_sentence_generated(sentence))
+                    self.root.after(0, lambda: self._update_sentence_generated(sentence, callback))
                 except Exception as e:
                     self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate sentence: {str(e)}"))
                 finally:
@@ -500,53 +514,111 @@ class SpeakAndSpeakApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate sentence: {str(e)}")
     
-    def _update_sentence_generated(self, sentence):
-        """Cập nhật câu được tạo"""
+    def _update_sentence_generated(self, sentence, callback=None):
+        """Cập nhật câu được tạo và gọi callback nếu có"""
         self.current_sentence = sentence
         self.sentence_label.configure(text=self.current_sentence)
         self.sentence_result_text.delete("1.0", "end")
+        if callback:
+            callback()
     
     def speak_word(self):
         """Phát âm từ"""
         if self.current_word:
-            self.word_status.configure(text="Speaking...")
-            self.start_fake_progress(self.word_progress, interval=1.0)
-            
-            def speak_thread():
-                try:
-                    self._speak_text(self.current_word)
-                finally:
-                    self.root.after(0, lambda: self.complete_progress(self.word_progress))
-                    self.root.after(0, lambda: self.word_status.configure(text=""))
-            
-            threading.Thread(target=speak_thread).start()
+            self._speak_current_word()
         else:
-            messagebox.showwarning("Warning", "Please generate a word first!")
+            # Tự động tạo từ và phát âm sau khi tạo xong
+            self.generate_random_word(callback=self._speak_current_word)
+    
+    def _speak_current_word(self):
+        """Phát âm từ hiện tại"""
+        self.word_status.configure(text="Speaking...")
+        self.start_fake_progress(self.word_progress, interval=1.0)
+        
+        def speak_thread():
+            try:
+                self._speak_text(self.current_word)
+            finally:
+                self.root.after(0, lambda: self.complete_progress(self.word_progress))
+                self.root.after(0, lambda: self.word_status.configure(text=""))
+        
+        threading.Thread(target=speak_thread).start()
     
     def speak_sentence(self):
         """Phát âm câu"""
         if self.current_sentence:
-            self.sentence_status.configure(text="Speaking...")
-            self.start_fake_progress(self.sentence_progress, interval=2.0)
-            
-            def speak_thread():
-                try:
-                    self._speak_text(self.current_sentence)
-                finally:
-                    self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
-                    self.root.after(0, lambda: self.sentence_status.configure(text=""))
-            
-            threading.Thread(target=speak_thread).start()
+            self._speak_current_sentence()
         else:
-            messagebox.showwarning("Warning", "Please generate a sentence first!")
+            # Tự động tạo câu và phát âm sau khi tạo xong
+            self.generate_random_sentence(callback=self._speak_current_sentence)
+    
+    def _speak_current_sentence(self):
+        """Phát âm câu hiện tại"""
+        self.sentence_status.configure(text="Speaking...")
+        self.start_fake_progress(self.sentence_progress, interval=2.0)
+        
+        def speak_thread():
+            try:
+                self._speak_text(self.current_sentence)
+            finally:
+                self.root.after(0, lambda: self.complete_progress(self.sentence_progress))
+                self.root.after(0, lambda: self.sentence_status.configure(text=""))
+        
+        threading.Thread(target=speak_thread).start()
     
     def _speak_text(self, text):
-        """Helper function để phát âm text"""
+        """Helper function để phát âm text với gTTS hoặc fallback sang pyttsx3"""
+        try:
+            # Thử dùng gTTS trước nếu có
+            if GTTS_AVAILABLE:
+                self._speak_with_gtts(text)
+            else:
+                # Fallback sang pyttsx3
+                self._speak_with_pyttsx3(text)
+        except Exception as e:
+            print(f"gTTS failed: {e}, falling back to pyttsx3")
+            # Nếu gTTS thất bại, fallback sang pyttsx3
+            try:
+                self._speak_with_pyttsx3(text)
+            except Exception as fallback_error:
+                print(f"pyttsx3 also failed: {fallback_error}")
+    
+    def _speak_with_gtts(self, text):
+        """Phát âm với gTTS"""
+        try:
+            # Tạo file tạm thời
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
+                temp_filename = tmp_file.name
+            
+            # Tạo gTTS object và lưu file
+            tts = gTTS(text=text, lang='en')
+            tts.save(temp_filename)
+            
+            # Phát âm với pygame
+            pygame.mixer.music.load(temp_filename)
+            pygame.mixer.music.play()
+            
+            # Chờ cho đến khi phát xong
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.1)
+            
+            # Xóa file tạm thời
+            try:
+                os.unlink(temp_filename)
+            except:
+                pass  # Không quan trọng nếu không xóa được
+                
+        except Exception as e:
+            # Nếu có lỗi, ném exception để fallback
+            raise e
+    
+    def _speak_with_pyttsx3(self, text):
+        """Phát âm với pyttsx3"""
         try:
             self.tts_engine.say(text)
             self.tts_engine.runAndWait()
         except Exception as e:
-            print(f"TTS Error: {e}")
+            print(f"pyttsx3 Error: {e}")
     
     def start_recording(self, duration, callback):
         """Bắt đầu ghi âm"""
