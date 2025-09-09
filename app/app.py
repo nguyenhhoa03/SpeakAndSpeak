@@ -540,7 +540,7 @@ class SpeakAndSpeakApp:
         try:
             system = platform.system()
             if system == "Windows":
-                sox_path = "./sox/sox.exe"
+                ffmpeg_path = "./ffmpeg.exe"
             else:
                 sox_path = "sox"
             
@@ -550,7 +550,7 @@ class SpeakAndSpeakApp:
             status_label.configure(text="Recording...")
             
             if system == "Windows":
-                cmd = [sox_path, "-t", "waveaudio", "-d", "-r", "44100", "-c", "1", "-b", "16", "audio.wav", "trim", "0", str(duration)]
+                cmd = [ffmpeg_path, "-f", "dshow", "-i", "audio=", "-ar", "44100", "-ac", "1", "-t", str(duration), "-y", "audio.wav"]
             else:
                 cmd = [sox_path, "-t", "alsa", "default", "-r", "44100", "-c", "1", "-b", "16", "audio.wav", "trim", "0", str(duration)]
             
