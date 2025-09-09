@@ -540,7 +540,7 @@ class SpeakAndSpeakApp:
         try:
             system = platform.system()
             if system == "Windows":
-                sox_path = "./sox.exe"
+                sox_path = "./sox/sox.exe"
             else:
                 sox_path = "sox"
             
