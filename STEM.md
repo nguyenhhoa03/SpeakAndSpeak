@@ -40,10 +40,10 @@ Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều
 ## 4. Quy trình triển khai & phát triển
 
 ### Công cụ và công nghệ phát triển
-* Ngôn ngữ lập trình chính: **Python**
-* Môi trường phát triển: **VSCodium** trên **Fedora Linux**
+* Ngôn ngữ lập trình chính: [**Python**](https://www.python.org/)
+* Môi trường phát triển: [**VSCodium**](https://vscodium.com/) trên [**Fedora Linux**](https://fedoraproject.org/)
 * Cơ sở dữ liệu: **yaml**
-* Trình chuyển đổi âm thanh và phiên âm: vosk, eng-to-ipa
+* Trình chuyển đổi âm thanh và phiên âm: vosk, eng-to-ipa, sox,...
 * Và các công cụ khác,...
 
 | Giai đoạn                   | Công việc chính                                     |
