@@ -97,10 +97,11 @@ Sản phẩm cuối cùng là một ứng dụng máy tính với đầy đủ t
 **Speak\&Speak** là một ví dụ rõ ràng về việc học sinh có thể tự tìm giải pháp công nghệ để giải quyết vấn đề thực tế trong học tập. Sản phẩm dễ dùng, miễn phí và có giá trị lâu dài nhờ cộng đồng cùng tham gia phát triển.
 
 ## 9. Thư viện ảnh 
-# Image Library
+### Image Library
 
 | | |
 |---|---|
 | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-44-47.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-45-22.png) |
 | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-08.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-16.png) |
 
+Lưu ý: Giao diện ứng dụng có thể khác nhau tùy hệ điều hành 
