@@ -21,7 +21,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
 `sox` (Sound eXchange) là một công cụ xử lý âm thanh dòng lệnh cần thiết để ghi âm trong ứng dụng.
 
 *   **Trên Windows:**
-    (Trong dự án này, `sox` được đặt sẵn trong thư mục app để tiện lợi, nên không cần cài đặt).
+    (Trong dự án này, `sox` được thay thế bằng ffmpeg, vui lòng thay thế bằng file ffmpeg gốc tại [gyan.dev](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z)).
 
 *   **Trên macOS:**
     Sử dụng Homebrew:
@@ -70,3 +70,4 @@ Dự án này được cấp phép theo Giấy phép Công cộng GNU (GNU Gener
 | vosk-model-en-us-0.22-lgraph | [Alphacephei](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) | [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) | Cần thay thế bằng thư mục gốc |
 | eng_sentences.tsv | [Tatoeba](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) | [CC BY 2.0 FR](https://creativecommons.org/licenses/by/2.0/fr/) & [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | Cần thay thế bằng file gốc |
 | sox-14.4.2rc2-win32.exe | [Sourceforge](https://sourceforge.net/projects/sox/) | [GPLv2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html) & [LGPLv2](https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html) | Không cần thay thế |
+| FFmpeg | [gyan.dev](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) | [LGPL 2.1+](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html) | Cần thay thế bằng file gốc |
