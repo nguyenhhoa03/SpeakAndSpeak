@@ -21,7 +21,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
 `sox` (Sound eXchange) là một công cụ xử lý âm thanh dòng lệnh cần thiết để ghi âm trong ứng dụng.
 
 *   **Trên Windows:**
-    (Trong dự án này, `sox` được thay thế bằng ffmpeg, vui lòng thay thế bằng file ffmpeg gốc tại [gyan.dev](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z)).
+    (Trong dự án này, `sox` được thay thế bằng ffmpeg, vui lòng thay thế bằng file ffmpeg gốc tại [gyan.dev](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) hoặc chỉ tải mã nguồn ở bước 2).
 
 *   **Trên macOS:**
     Sử dụng Homebrew:
@@ -35,7 +35,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
     ```
 
 ### 2. Tải toàn bộ mã nguồn
-Toàn bộ mã nguồn sẽ có sớm.
+Toàn bộ mã nguồn có thể tải tại [Mega Mirror](https://mega.nz/file/VOcAzRYa#vkQWT2jf9dLLV0JpXovf4sbl6z_YObhjcQittbr2gF4)
 
 ### 3. Cài đặt thư viện Python
 
