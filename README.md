@@ -35,7 +35,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
     ```
 
 ### 2. Tải toàn bộ mã nguồn
-Toàn bộ mã nguồn có thể tải tại [Mega Mirror](https://mega.nz/file/VOcAzRYa#vkQWT2jf9dLLV0JpXovf4sbl6z_YObhjcQittbr2gF4)
+Toàn bộ mã nguồn có thể tải tại [Mega Mirror](https://mega.nz/file/VOcAzRYa#vkQWT2jf9dLLV0JpXovf4sbl6z_YObhjcQittbr2gF4) hoặc [Google Drive](https://drive.google.com/file/d/1OZztGiC7oW7LPIsmkX9O77Dr-2fsvkAd/view?usp=drive_link)
 
 ### 3. Cài đặt thư viện Python
 
