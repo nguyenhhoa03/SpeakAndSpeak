@@ -5,5 +5,4 @@ vosk
 pyaudio
 pyttsx3
 numpy
-wonderwords
 eng_to_ipa
