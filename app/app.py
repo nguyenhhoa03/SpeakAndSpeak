@@ -550,7 +550,9 @@ class SpeakAndSpeakApp:
             status_label.configure(text="Recording...")
             
             if system == "Windows":
-                cmd = [ffmpeg_path, "-f", "dshow", "-i", "audio=", "-ar", "44100", "-ac", "1", "-t", str(duration), "-y", "audio.wav"]
+                cmd = [ffmpeg_path, "-f", "mf", "-i", "audio=default",
+       "-ar", "44100", "-ac", "1", "-t", str(duration), "-y", "audio.wav"]
+
             else:
                 cmd = [sox_path, "-t", "alsa", "default", "-r", "44100", "-c", "1", "-b", "16", "audio.wav", "trim", "0", str(duration)]
             
