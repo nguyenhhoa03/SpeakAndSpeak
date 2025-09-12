@@ -39,12 +39,18 @@ Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều
 
 ## 4. Quy trình triển khai & phát triển
 
-### Công cụ và công nghệ phát triển
+### 1. Khởi động dự án
+
+Xác định nhu cầu, tìm hiểu công nghệ.
+
+#### Công cụ và công nghệ phát triển
 * Ngôn ngữ lập trình chính: [**Python**](https://www.python.org/)
 * Môi trường phát triển: [**VSCodium**](https://vscodium.com/) trên [**Fedora Linux**](https://fedoraproject.org/)
-* Cơ sở dữ liệu: **yaml**
-* Trình chuyển đổi âm thanh và phiên âm: vosk, eng-to-ipa, sox,...
+* Trình chuyển đổi âm thanh và phiên âm tiếng Anh: [**vosk**](https://pypi.org/project/vosk/), [**eng-to-ipa**](https://pypi.org/project/eng-to-ipa/)
+* Cơ sở dữ liệu: **yaml**, **tsv**
 * Và các công cụ khác,...
+
+![Cấu trúc thư mục chính của SpeakAndSpeak](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-12%2023-44-12.png)
 
 | Giai đoạn                   | Công việc chính                                     |
 | --------------------------- | --------------------------------------------------- |
