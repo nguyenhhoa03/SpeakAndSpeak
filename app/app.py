@@ -2,7 +2,6 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import threading
-import subprocess
 import platform
 import os
 import yaml
@@ -10,6 +9,8 @@ import pyttsx3
 import webbrowser
 from PIL import Image
 import time
+import pyaudio
+import wave
 
 from non_random_word import generate_word
 from non_random_sentence import generate_sentence
@@ -31,6 +32,12 @@ class SpeakAndSpeakApp:
         
         # TTS engine sẽ được tạo mới cho mỗi lần phát âm
         self.tts_engine = None
+        
+        # PyAudio configuration
+        self.audio_format = pyaudio.paInt16
+        self.channels = 1
+        self.rate = 44100
+        self.chunk = 1024
         
         self.current_word = ""
         self.current_sentence = ""
@@ -534,53 +541,62 @@ class SpeakAndSpeakApp:
             return
         
         self.is_recording = True
-        threading.Thread(target=self._record_audio, args=(duration, callback), daemon=True).start()
+        threading.Thread(target=self._record_audio_pyaudio, args=(duration, callback), daemon=True).start()
     
-    def _record_audio(self, duration, callback):
+    def _record_audio_pyaudio(self, duration, callback):
+        """Record audio using PyAudio"""
         try:
-            system = platform.system()
-            if system == "Windows":
-                ffmpeg_path = "./ffmpeg.exe"
-            else:
-                sox_path = "sox"
-            
             progress_bar = self.word_progress if duration == 3 else self.sentence_progress
             status_label = self.word_status if duration == 3 else self.sentence_status
             
-            status_label.configure(text="Recording...")
+            self.root.after(0, lambda: status_label.configure(text="Recording..."))
             
-            if system == "Windows":
-                cmd = [ffmpeg_path, "-f", "mf", "-i", "audio=default",
-       "-ar", "44100", "-ac", "1", "-t", str(duration), "-y", "audio.wav"]
-
-            else:
-                cmd = [sox_path, "-t", "alsa", "default", "-r", "44100", "-c", "1", "-b", "16", "audio.wav", "trim", "0", str(duration)]
+            # Initialize PyAudio
+            audio = pyaudio.PyAudio()
             
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Open stream
+            stream = audio.open(
+                format=self.audio_format,
+                channels=self.channels,
+                rate=self.rate,
+                input=True,
+                frames_per_buffer=self.chunk
+            )
             
-            for i in range(duration * 10):
-                if process.poll() is not None:
-                    break
-                progress = (i + 1) / (duration * 10)
-                progress_bar.set(progress)
-                time.sleep(0.1)
+            frames = []
+            total_frames = int(self.rate / self.chunk * duration)
             
-            stdout, stderr = process.communicate()
+            # Record for the specified duration
+            for i in range(total_frames):
+                data = stream.read(self.chunk)
+                frames.append(data)
+                
+                # Update progress bar
+                progress = (i + 1) / total_frames
+                self.root.after(0, lambda p=progress: progress_bar.set(p))
             
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, cmd, stderr)
+            # Stop and close stream
+            stream.stop_stream()
+            stream.close()
+            audio.terminate()
             
-            status_label.configure(text="Recording completed!")
-            progress_bar.set(0)
+            # Save the recorded data as a WAV file
+            with wave.open("audio.wav", 'wb') as wf:
+                wf.setnchannels(self.channels)
+                wf.setsampwidth(audio.get_sample_size(self.audio_format))
+                wf.setframerate(self.rate)
+                wf.writeframes(b''.join(frames))
             
+            self.root.after(0, lambda: status_label.configure(text="Recording completed!"))
+            self.root.after(0, lambda: progress_bar.set(0))
+            
+            # Process the recorded audio
             callback()
             
-        except subprocess.CalledProcessError as e:
-            error_msg = f"Recording failed: {e}"
-            self.root.after(0, lambda msg=error_msg: status_label.configure(text=msg))
         except Exception as e:
-            error_msg = f"Error: {e}"
-            self.root.after(0, lambda msg=error_msg: status_label.configure(text=msg))
+            error_msg = f"Recording error: {str(e)}"
+            print(error_msg)
+            self.root.after(0, lambda: status_label.configure(text=error_msg))
         finally:
             self.is_recording = False
     
