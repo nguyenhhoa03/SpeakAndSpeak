@@ -1,6 +1,6 @@
 # SpeakAndSpeak 🪶
 
-Một ứng dụng đơn giản được thiết kế để giúp bạn cải thiện phát âm tiếng Anh. SpeakAndSpeak cung cấp các bài tập phát âm từ và câu, sử dụng công nghệ chuyển đổi giọng nói thành văn bản (Speech-to-Text) và đánh giá phát âm để cung cấp phản hồi chi tiết.
+Một ứng dụng đơn giản được thiết kế để giúp bạn cải thiện phát âm tiếng Anh. SpeakAndSpeak cung cấp các bài tập phát âm từ và câu cá nhân hóa, sử dụng công nghệ chuyển đổi giọng nói thành văn bản (Speech-to-Text) và đánh giá phát âm để cung cấp phản hồi chi tiết.
 
 ## Tính năng chính
 
