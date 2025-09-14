@@ -12,37 +12,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
 
 ## Cài đặt
 
-Để chạy SpeakAndSpeak, bạn cần cài đặt các thư viện Python cần thiết và công cụ `sox`.
-
-### 1. Cài đặt `sox`
-
-`sox` (Sound eXchange) là một công cụ xử lý âm thanh dòng lệnh cần thiết để ghi âm trong ứng dụng.
-
-*   **Trên Windows:**
-    (Trong dự án này, `sox` được thay thế bằng ffmpeg, vui lòng thay thế bằng file ffmpeg gốc tại [gyan.dev](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-essentials.7z) hoặc chỉ tải mã nguồn ở bước 2).
-
-*   **Trên macOS:**
-    Sử dụng Homebrew:
-    ```bash
-    brew install sox
-    ```
-
-*   **Trên Linux (Debian/Ubuntu):**
-    ```bash
-    sudo apt-get install sox libsox-fmt-all
-    ```
-
-### 2. Tải toàn bộ mã nguồn
-Toàn bộ mã nguồn có thể tải tại [Mega Mirror](https://mega.nz/file/VOcAzRYa#vkQWT2jf9dLLV0JpXovf4sbl6z_YObhjcQittbr2gF4) hoặc [Google Drive](https://drive.google.com/file/d/1OZztGiC7oW7LPIsmkX9O77Dr-2fsvkAd/view?usp=drive_link)
-
-### 3. Cài đặt thư viện Python
-
-Sử dụng `pip` để cài đặt các thư viện cần thiết từ `requirements.txt`:
-
-```bash
-pip install -r requirements.txt
-```
-
+Để chạy SpeakAndSpeak, cách đơn giản nhất là dùng trình cài đặt đã được build sẵn
 
 ## Cách sử dụng
 
