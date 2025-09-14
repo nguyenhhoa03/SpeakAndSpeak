@@ -12,7 +12,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
 
 ## Cài đặt
 
-Để chạy SpeakAndSpeak, cách đơn giản nhất là dùng trình cài đặt đã được build sẵn
+Để chạy SpeakAndSpeak, cách đơn giản nhất là dùng trình cài đặt đã được build sẵn tại [Github Release](https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/tag/SpeakAndSpeak)
 
 ## Cách sử dụng
 
