@@ -1,6 +1,6 @@
 # Báo cáo sản phẩm STEM: Speak\&Speak
 
-## 1. Thông tin chung
+## I. Thông tin chung
 
 * **Tên dự án:** Speak\&Speak
 * **Học sinh thực hiện:** Nguyễn Hữu Hòa – Lớp 11L
@@ -8,7 +8,7 @@
 
 ---
 
-## 2. Lý do và mục tiêu
+## II. Lý do và mục tiêu
 
 Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều học sinh vẫn phát âm chưa chuẩn, thiếu tự tin nói tiếng Anh. Các ứng dụng hiện có thường phức tạp, tốn phí, hoặc không phù hợp với học sinh Việt Nam.
 
@@ -20,7 +20,7 @@ Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều
 
 ---
 
-## 3. Giải pháp
+## III. Giải pháp
 
 Ứng dụng hoạt động như một **trợ lý luyện phát âm**:
 
@@ -37,7 +37,7 @@ Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều
 
 ---
 
-## 4. Quy trình triển khai & phát triển
+## IV. Quy trình triển khai & phát triển
 
 ### 1. Khởi động dự án
 
@@ -52,18 +52,12 @@ Xác định nhu cầu, tìm hiểu công nghệ.
 
 ![Cấu trúc thư mục chính của SpeakAndSpeak](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-12%2023-44-12.png)
 
-| Giai đoạn                   | Công việc chính                                     |
-| --------------------------- | --------------------------------------------------- |
-| 1. Khởi động dự án          | Xác định nhu cầu, tìm hiểu công nghệ.               |
-| 2. Thiết kế ứng dụng        | Lên sơ đồ hoạt động, giao diện, cách lưu dữ liệu.   |
-| 3. Xây dựng tính năng chính | Thu âm, so sánh phát âm, tạo bài tập thông minh.    |
-| 4. Hoàn thiện giao diện     | Tối ưu hiển thị, dễ thao tác.                       |
-| 5. Kiểm thử và sửa lỗi      | Chạy thử nhiều lần, đảm bảo ổn định.                |
-| 6. Hoàn thiện sản phẩm      | Viết tài liệu, đóng gói phần mềm, chuẩn bị báo cáo. |
+### 2. Thiết kê ứng dụng
 
----
+Lên sơ đồ hoạt động, giao diện, cách lưu dữ liệu.
 
-## 5. Qui trình hoạt động: 
+#### Hoạt động
+
 * Luyện phát âm từ và câu: Cung cấp từ/câu để người dùng luyện tập.
 * Phản hồi chi tiết: Sau khi người dùng ghi âm, ứng dụng sẽ:
 * Chỉ ra các từ phát âm sai.
@@ -72,7 +66,59 @@ Xác định nhu cầu, tìm hiểu công nghệ.
 * Luyện tập thông minh: Tự động đề xuất các từ/câu có chứa âm người dùng hay sai.
 * Thống kê tiến độ: Phân tích 20 lần luyện tập gần nhất để đưa ra điểm tổng thể, nhận xét sự tiến bộ và gợi ý các âm cần cải thiện.
 
-## 6. Mô tả chi tiết kết quả
+#### Giao diện
+
+Ứng dụng có 6 mục chính: **Chào mừng**, **Luyện từ**, **Luyện câu**, **Thống kê**, **Cài đặt**, và **Giới thiệu**. Mỗi mục được thiết kế trực quan với nút bấm lớn, thanh tiến trình hiển thị quá trình thu âm/xử lý, và khung văn bản để hiển thị kết quả hoặc thống kê.
+
+#### Lưu dữ liệu
+
+* **Cài đặt** (giao diện, màu sắc, ảnh chào mừng) được lưu trong **cơ sở dữ liệu YAML** để giữ nguyên khi mở lại ứng dụng.
+* **Kết quả luyện tập và các lỗi phát âm** cũng được ghi vào **cơ sở dữ liệu YAML**, giúp hệ thống chọn từ/câu phù hợp hơn cho lần luyện sau.
+
+### 3. Xây dựng tính năng chính
+
+Để dễ dàng phát triển và bảo trì, ứng dụng được tách ra thành nhiều module nhỏ (mỗi module là một file python chứa các chức năng khác nhau) và một file python chính tổng hợp các module thành một app hoàn chỉnh. 
+
+| Tên module                 | Tên file                      | Chức năng                                                                  |
+| -------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| Tạo câu luyện tập          | `non_random_sentence.py`      | Đưa ra câu tiếng Anh để luyện, ưu tiên những câu chứa lỗi phát âm trước đó |
+| Tạo từ luyện tập           | `non_random_word.py`          | Đưa ra từ tiếng Anh để luyện, cũng dựa trên lỗi phát âm đã lưu             |
+| Đánh giá phát âm           | `pronunciation_assessment.py` | So sánh phát âm người dùng với chuẩn, chỉ ra từ sai và âm sai              |
+| Chuyển giọng nói thành chữ | `speech_to_text.py`           | Nghe giọng người dùng và biến thành văn bản tiếng Anh                      |
+| Phân tích thống kê         | `user_statistics.py`          | Xem lại kết quả, điểm số, lỗi thường gặp và lời khuyên luyện tập           |
+| Ứng dụng chính             | `app.py`                      | Giao diện tổng thể, kết nối các module lại thành ứng dụng hoàn chỉnh       |
+
+### 4. Hoàn thiện giao diện
+
+Ứng dụng được viết bằng thư viện [CustomTkinter](https://customtkinter.tomschimansky.com/) để xây dựng giao diện, vừa đơn giản và gọn nhẹ nhưng vẫn đảm bảo tính thẩm mỹ.
+
+| | |
+|---|---|
+| ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-44-47.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-45-22.png) |
+| ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-08.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-16.png) |
+
+### 5. Kiểm thử và sửa lỗi
+
+Sau rất nhiều thời gian sửa lỗi và [update](https://github.com/nguyenhhoa03/SpeakAndSpeak/commits) thì ứng dụng đã hoạt động ổn định trên **Windows** và **Linux**. Tuy nhiên, hiện chưa được chạy thử trên **macOS** do em không có thiết bị để kiểm tra, đây là thiếu sót của dự án tuy nhiên em sẽ cố găng khắc phục trong tương lai gần.
+
+### 6. Hoàn thiện sản phẩn 
+
+Đễ dễ dàng sử dụng, em đã tạo ra trình cài đặt cho SpeakAndSpeak giúp mọi người cài đặt một cách đơn giản và dễ dàng.
+
+![Quá trình taoh ra trình cài đặt cho ứng dụng](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-15%2019-47-23.png)
+
+Cuối cùng là viết báo cáo cho sản phẩm là nội dung mà bạn đang đọc.
+
+## V. Hướng dẫn cài đặt và sử dụng: 
+
+Cài đặt ứng dụng rất đơn giản, chỉ cần bạn tải trình cài đặt [SpeakAndSpeak-Setup-v1.0.exe](https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/download/SpeakAndSpeak/SpeakAndSpeak-Setup-v1.0.exe) ở [Github Releases](https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/tag/SpeakAndSpeak) và chạy nó. Tiếp theo chỉ cần làm theo hướng dẫn là được. 
+
+|  License | Tạo shortcut | Tóm tắt cài đặt | Đang cài đặt | Hoàn thành |
+|-------------------------|--------------|-----------------|--------------|------------|
+| ![Phần chấp nhận License](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-26.png) | ![Tạo shortcut](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-32.png) | ![Tóm tắt cài đặt](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-37.png) | ![Đang cài đặt](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-44.png) | ![Hoàn thành](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-04-01.png) |
+
+
+## VI. Mô tả chi tiết kết quả
 
 Sản phẩm cuối cùng là một ứng dụng máy tính với đầy đủ tính năng:
 
@@ -90,7 +136,7 @@ Sản phẩm cuối cùng là một ứng dụng máy tính với đầy đủ t
 
 ---
 
-## 7. Giá trị và tiềm năng
+## VII. Giá trị và tiềm năng
 
 * Giúp học sinh tự học phát âm tại nhà, không cần giáo viên kèm trực tiếp.
 * Tăng sự tự tin khi giao tiếp tiếng Anh.
@@ -98,16 +144,7 @@ Sản phẩm cuối cùng là một ứng dụng máy tính với đầy đủ t
 
 ---
 
-## 8. Kết luận
+## VIII. Kết luận
 
 **Speak\&Speak** là một ví dụ rõ ràng về việc học sinh có thể tự tìm giải pháp công nghệ để giải quyết vấn đề thực tế trong học tập. Sản phẩm dễ dùng, miễn phí và có giá trị lâu dài nhờ cộng đồng cùng tham gia phát triển.
 
-## 9. Thư viện ảnh 
-### Image Library
-
-| | |
-|---|---|
-| ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-44-47.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-45-22.png) |
-| ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-08.png) | ![](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-16.png) |
-
-Lưu ý: Giao diện ứng dụng có thể khác nhau tùy hệ điều hành 
