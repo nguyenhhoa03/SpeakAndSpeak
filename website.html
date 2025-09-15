@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speak&Speak - Báo cáo sản phẩm STEM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #2d3748;
+            --secondary-text: #4a5568;
+            --accent-color: #4f46e5;
+            --accent-light: #6366f1;
+            --card-bg: #f7fafc;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-color: #10b981;
+            --info-color: #3b82f6;
+            --warning-color: #f59e0b;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a202c;
+                --text-color: #f7fafc;
+                --secondary-text: #e2e8f0;
+                --accent-color: #6366f1;
+                --accent-light: #8b5cf6;
+                --card-bg: #2d3748;
+                --border-color: #4a5568;
+                --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+                --gradient: linear-gradient(135deg, #4338ca 0%, #7c3aed 100%);
+                --success-color: #34d399;
+                --info-color: #60a5fa;
+                --warning-color: #fbbf24;
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+
+        .hero {
+            background: var(--gradient);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            background: var(--card-bg);
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-color);
+        }
+
+        .section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        h1, h2, h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--accent-light);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        h4 {
+            color: var(--accent-color);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tech-item {
+            background: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tech-item:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .image-container img:hover {
+            transform: scale(1.02);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .image-grid img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: var(--bg-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: var(--card-bg);
+        }
+
+        .install-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .install-step {
+            text-align: center;
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .install-step:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .install-step h4 {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .install-step img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .feature-item {
+            background: var(--bg-color);
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .feature-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-light));
+        }
+
+        .feature-item:hover {
+            transform: translateY(-2px);
+            border-left-color: var(--accent-light);
+        }
+
+        .feature-item h4 {
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .links-section {
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-top: 4rem;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .links-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
+        .links-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .links-section h2 {
+            color: white !important;
+            border-bottom: 3px solid rgba(255,255,255,0.3) !important;
+            margin-bottom: 2rem;
+        }
+
+        .links-section h2::after {
+            background: rgba(255,255,255,0.5) !important;
+        }
+
+        .links-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .link-button {
+            display: block;
+            padding: 2rem 1.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            text-decoration: none;
+            border-radius: 16px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .link-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .link-button small {
+            display: block;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .footer-info {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .footer-info p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 2rem 0;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .section {
+                padding: 1.5rem;
+                margin: 1rem 0;
+                border-radius: 12px;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .tech-grid,
+            .feature-list {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .install-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .links-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .link-button {
+                padding: 1.5rem 1rem;
+            }
+            
+            .links-section {
+                padding: 2rem 1rem;
+                margin-top: 2rem;
+                border-radius: 12px;
+            }
+            
+            .image-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 0.8rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+            
+            .tech-item,
+            .feature-item {
+                padding: 1rem;
+            }
+            
+            .links-section {
+                padding: 1.5rem 0.5rem;
+            }
+            
+            .link-button {
+                padding: 1rem 0.8rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <div class="container">
+                <h1>Speak&Speak</h1>
+                <p>Báo cáo sản phẩm STEM - Ứng dụng luyện phát âm tiếng Anh thông minh</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section fade-in">
+            <h2>I. Thông tin chung</h2>
+            <ul>
+                <li><strong>Tên dự án:</strong> <span class="highlight">Speak&Speak</span></li>
+                <li><strong>Học sinh thực hiện:</strong> Nguyễn Hữu Hòa – Lớp 11L</li>
+                <li><strong>Giáo viên hướng dẫn:</strong> Thầy Nguyễn Hữu Hợp – Bộ môn Tin học</li>
+            </ul>
+        </div>
+
+        <div class="section fade-in">
+            <h2>II. Lý do và mục tiêu</h2>
+            <p>Tiếng Anh quan trọng trong học tập và hội nhập. Tuy nhiên, nhiều học sinh vẫn phát âm chưa chuẩn, thiếu tự tin nói tiếng Anh. Các ứng dụng hiện có thường phức tạp, tốn phí, hoặc không phù hợp với học sinh Việt Nam.</p>
+            
+            <h3><span class="highlight">Speak&Speak</span> ra đời để:</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🎯 Mục tiêu chính</h4>
+                    <p>Cung cấp công cụ luyện phát âm <strong>miễn phí, dễ dùng, phù hợp học sinh THPT</strong>.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>💪 Hỗ trợ học tập</h4>
+                    <p>Hỗ trợ người học tự luyện nói chính xác, tự tin.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🔓 Mã nguồn mở</h4>
+                    <p>Đảm bảo <strong>mã nguồn mở</strong> (GNU GPL v3) để cộng đồng cùng học hỏi và phát triển.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section fade-in">
+            <h2>III. Giải pháp</h2>
+            <p>Ứng dụng hoạt động như một <strong>trợ lý luyện phát âm</strong>:</p>
+            
+            <ol>
+                <li>Người dùng chọn bài luyện (từ/câu).</li>
+                <li>Ứng dụng ghi âm giọng đọc và so sánh với phát âm chuẩn.</li>
+                <li>Hiển thị kết quả rõ ràng: chỉ ra lỗi, đưa gợi ý sửa.</li>
+                <li>Ghi nhớ lỗi để tạo bài luyện tập <strong>tập trung vào điểm yếu</strong>.</li>
+            </ol>
+
+            <h3>Ưu điểm:</h3>
+            <ul>
+                <li>Bài tập cá nhân hóa theo từng người.</li>
+                <li>Giao diện trực quan, dễ dùng, không yêu cầu mạng.</li>
+                <li>Hoàn toàn miễn phí, minh bạch mã nguồn.</li>
+            </ul>
+        </div>
+
+        <div class="section fade-in">
+            <h2>IV. Quy trình triển khai & phát triển</h2>
+            
+            <h3>1. Khởi động dự án</h3>
+            <p>Xác định nhu cầu, tìm hiểu công nghệ.</p>
+
+            <h4>Công cụ và công nghệ phát triển</h4>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <strong>Ngôn ngữ lập trình chính:</strong> <a href="https://www.python.org/">Python</a>
+                </div>
+                <div class="tech-item">
+                    <strong>Môi trường phát triển:</strong> <a href="https://vscodium.com/">VSCodium</a> trên <a href="https://fedoraproject.org/">Fedora Linux</a>
+                </div>
+                <div class="tech-item">
+                    <strong>Trình chuyển đổi âm thanh:</strong> <a href="https://pypi.org/project/vosk/">vosk</a>, <a href="https://pypi.org/project/eng-to-ipa/">eng-to-ipa</a>
+                </div>
+                <div class="tech-item">
+                    <strong>Cơ sở dữ liệu:</strong> yaml, tsv
+                </div>
+            </div>
+
+            <div class="image-container">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-12%2023-44-12.png" alt="Cấu trúc thư mục chính của SpeakAndSpeak">
+                <p><em>Cấu trúc thư mục chính của SpeakAndSpeak</em></p>
+            </div>
+
+            <h3>2. Thiết kế ứng dụng</h3>
+            <p>Lên sơ đồ hoạt động, giao diện, cách lưu dữ liệu.</p>
+
+            <h4>Hoạt động</h4>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🎤 Luyện phát âm từ và câu</h4>
+                    <p>Cung cấp từ/câu để người dùng luyện tập.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📊 Phản hồi chi tiết</h4>
+                    <p>Sau khi người dùng ghi âm, ứng dụng sẽ chỉ ra các từ phát âm sai, hiển thị phiên âm IPA chuẩn và phiên âm mà hệ thống nhận diện được.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🧠 Luyện tập thông minh</h4>
+                    <p>Tự động đề xuất các từ/câu có chứa âm người dùng hay sai.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📈 Thống kê tiến độ</h4>
+                    <p>Phân tích 20 lần luyện tập gần nhất để đưa ra điểm tổng thể, nhận xét sự tiến bộ và gợi ý các âm cần cải thiện.</p>
+                </div>
+            </div>
+
+            <h4>Giao diện</h4>
+            <p>Ứng dụng có 6 mục chính: <strong>Chào mừng</strong>, <strong>Luyện từ</strong>, <strong>Luyện câu</strong>, <strong>Thống kê</strong>, <strong>Cài đặt</strong>, và <strong>Giới thiệu</strong>. Mỗi mục được thiết kế trực quan với nút bấm lớn, thanh tiến trình hiển thị quá trình thu âm/xử lý, và khung văn bản để hiển thị kết quả hoặc thống kê.</p>
+
+            <h4>Lưu dữ liệu</h4>
+            <ul>
+                <li><strong>Cài đặt</strong> (giao diện, màu sắc, ảnh chào mừng) được lưu trong <strong>cơ sở dữ liệu YAML</strong> để giữ nguyên khi mở lại ứng dụng.</li>
+                <li><strong>Kết quả luyện tập và các lỗi phát âm</strong> cũng được ghi vào <strong>cơ sở dữ liệu YAML</strong>, giúp hệ thống chọn từ/câu phù hợp hơn cho lần luyện sau.</li>
+            </ul>
+
+            <h3>3. Xây dựng tính năng chính</h3>
+            <p>Để dễ dàng phát triển và bảo trì, ứng dụng được tách ra thành nhiều module nhỏ (mỗi module là một file python chứa các chức năng khác nhau) và một file python chính tổng hợp các module thành một app hoàn chỉnh.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên module</th>
+                        <th>Tên file</th>
+                        <th>Chức năng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tạo câu luyện tập</td>
+                        <td><code>non_random_sentence.py</code></td>
+                        <td>Đưa ra câu tiếng Anh để luyện, ưu tiên những câu chứa lỗi phát âm trước đó</td>
+                    </tr>
+                    <tr>
+                        <td>Tạo từ luyện tập</td>
+                        <td><code>non_random_word.py</code></td>
+                        <td>Đưa ra từ tiếng Anh để luyện, cũng dựa trên lỗi phát âm đã lưu</td>
+                    </tr>
+                    <tr>
+                        <td>Đánh giá phát âm</td>
+                        <td><code>pronunciation_assessment.py</code></td>
+                        <td>So sánh phát âm người dùng với chuẩn, chỉ ra từ sai và âm sai</td>
+                    </tr>
+                    <tr>
+                        <td>Chuyển giọng nói thành chữ</td>
+                        <td><code>speech_to_text.py</code></td>
+                        <td>Nghe giọng người dùng và biến thành văn bản tiếng Anh</td>
+                    </tr>
+                    <tr>
+                        <td>Phân tích thống kê</td>
+                        <td><code>user_statistics.py</code></td>
+                        <td>Xem lại kết quả, điểm số, lỗi thường gặp và lời khuyên luyện tập</td>
+                    </tr>
+                    <tr>
+                        <td>Ứng dụng chính</td>
+                        <td><code>app.py</code></td>
+                        <td>Giao diện tổng thể, kết nối các module lại thành ứng dụng hoàn chỉnh</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>4. Hoàn thiện giao diện</h3>
+            <p>Ứng dụng được viết bằng thư viện <a href="https://customtkinter.tomschimansky.com/">CustomTkinter</a> để xây dựng giao diện, vừa đơn giản và gọn nhẹ nhưng vẫn đảm bảo tính thẩm mỹ.</p>
+
+            <div class="image-grid">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-44-47.png" alt="Giao diện chính">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-45-22.png" alt="Màn hình luyện tập">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-08.png" alt="Kết quả phân tích">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-02%2012-46-16.png" alt="Thống kê tiến độ">
+            </div>
+
+            <h3>5. Kiểm thử và sửa lỗi</h3>
+            <p>Sau rất nhiều thời gian sửa lỗi và <a href="https://github.com/nguyenhhoa03/SpeakAndSpeak/commits">update</a> thì ứng dụng đã hoạt động ổn định trên <strong>Windows</strong> và <strong>Linux</strong>. Tuy nhiên, hiện chưa được chạy thử trên <strong>macOS</strong> do em không có thiết bị để kiểm tra, đây là thiếu sót của dự án tuy nhiên em sẽ cố gắng khắc phục trong tương lai gần.</p>
+
+            <h3>6. Hoàn thiện sản phẩm</h3>
+            <p>Để dễ dàng sử dụng, em đã tạo ra trình cài đặt cho SpeakAndSpeak giúp mọi người cài đặt một cách đơn giản và dễ dàng.</p>
+
+            <div class="image-container">
+                <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-15%2019-47-23.png" alt="Quá trình tạo ra trình cài đặt cho ứng dụng">
+                <p><em>Quá trình tạo ra trình cài đặt cho ứng dụng</em></p>
+            </div>
+
+            <p>Cuối cùng là viết báo cáo cho sản phẩm là nội dung mà bạn đang đọc.</p>
+        </div>
+
+        <div class="section fade-in">
+            <h2>V. Hướng dẫn cài đặt và sử dụng</h2>
+            <p>Cài đặt ứng dụng rất đơn giản, chỉ cần bạn tải trình cài đặt <a href="https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/download/SpeakAndSpeak/SpeakAndSpeak-Setup-v1.0.exe">SpeakAndSpeak-Setup-v1.0.exe</a> ở <a href="https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/tag/SpeakAndSpeak">Github Releases</a> và chạy nó. Tiếp theo chỉ cần làm theo hướng dẫn là được.</p>
+
+            <div class="install-grid">
+                <div class="install-step">
+                    <h4>License</h4>
+                    <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-26.png" alt="Phần chấp nhận License">
+                </div>
+                <div class="install-step">
+                    <h4>Tạo shortcut</h4>
+                    <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-32.png" alt="Tạo shortcut">
+                </div>
+                <div class="install-step">
+                    <h4>Tóm tắt cài đặt</h4>
+                    <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-37.png" alt="Tóm tắt cài đặt">
+                </div>
+                <div class="install-step">
+                    <h4>Đang cài đặt</h4>
+                    <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-44.png" alt="Đang cài đặt">
+                </div>
+                <div class="install-step">
+                    <h4>Hoàn thành</h4>
+                    <img src="https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-04-01.png" alt="Hoàn thành">
+                </div>
+            </div>
+        </div>
+
+        <div class="section fade-in">
+            <h2>VI. Mô tả chi tiết kết quả</h2>
+            <p>Sản phẩm cuối cùng là một ứng dụng máy tính với đầy đủ tính năng:</p>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🎯 Luyện phát âm từ và câu</h4>
+                    <p>Có sẵn kho từ/câu để luyện tập.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🔍 Đánh giá chi tiết</h4>
+                    <p>Khi người dùng ghi âm, ứng dụng sẽ chỉ ra các từ phát âm sai, hiển thị phát âm chuẩn và cách bạn vừa đọc, liệt kê âm nào đọc sai.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🤖 Luyện tập thông minh</h4>
+                    <p>Hệ thống tự đề xuất bài tập chứa âm bạn thường sai.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📊 Theo dõi tiến bộ</h4>
+                    <p>Thống kê kết quả luyện tập gần đây, hiển thị mức độ cải thiện.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🎨 Tùy chỉnh giao diện</h4>
+                    <p>Hỗ trợ chế độ sáng/tối và màu sắc yêu thích.</p>
+                </div>
+            </div>
+
+            <p>Ứng dụng chạy hoàn toàn <strong>offline</strong>, phù hợp cả máy cấu hình thấp, dễ cài đặt và sử dụng cho mọi học sinh.</p>
+        </div>
+
+        <div class="section fade-in">
+            <h2>VII. Giá trị và tiềm năng</h2>
+            <ul>
+                <li>Giúp học sinh tự học phát âm tại nhà, không cần giáo viên kèm trực tiếp.</li>
+                <li>Tăng sự tự tin khi giao tiếp tiếng Anh.</li>
+                <li>Khuyến khích tinh thần học hỏi, chia sẻ và phát triển phần mềm tự do.</li>
+            </ul>
+        </div>
+
+        <div class="section fade-in">
+            <h2>VIII. Kết luận</h2>
+            <p><span class="highlight">Speak&Speak</span> là một ví dụ rõ ràng về việc học sinh có thể tự tìm giải pháp công nghệ để giải quyết vấn đề thực tế trong học tập. Sản phẩm dễ dùng, miễn phí và có giá trị lâu dài nhờ cộng đồng cùng tham gia phát triển.</p>
+        </div>
+    </div>
+
+    <!-- Links Section moved to bottom -->
+    <div class="links-section">
+        <div class="links-content">
+            <div class="container">
+                <h2>📄 Truy cập báo cáo đầy đủ</h2>
+                <p>Bạn có thể đọc và tải xuống báo cáo chi tiết qua các liên kết sau:</p>
+                
+                <div class="links-container">
+                    <a href="https://www.canva.com/design/DAGzDR6MKpk/zJ1PTev7n--3qfzMBNEUXQ/edit?utm_content=DAGzDR6MKpk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" class="link-button">
+                        🔗 Canva Docs
+                        <small>Xem trực tuyến và bình luận</small>
+                    </a>
+                    <a href="https://github.com/nguyenhhoa03/SpeakAndSpeak" class="link-button">
+                        📋 GitHub Markdown
+                        <small>Mã nguồn và tài liệu</small>
+                    </a>
+                    <a href="https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/download/SpeakAndSpeak/SpeakAndSpeak-Setup-v1.0.exe" class="link-button">
+                        💾 Tải xuống ứng dụng
+                        <small>Phiên bản mới nhất</small>
+                    </a>
+                </div>
+                
+                <div class="footer-info">
+                    <p>
+                        © 2024 Nguyễn Hữu Hòa - Lớp 11L<br>
+                        Dự án STEM được phát triển dưới giấy phép GNU GPL v3
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add loading animation for images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('load', function() {
+                this.style.opacity = '1';
+            });
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.3s ease';
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Add theme detection info to console
+        console.log('🌙 Website tự động chuyển đổi theme dựa trên cài đặt hệ thống của bạn');
+        console.log('💡 Để thay đổi theme: Settings → Appearance → Light/Dark mode');
+
+        // Smooth scroll to top functionality
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const sections = document.querySelectorAll('.section');
+            
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.8 && rect.bottom > 0) {
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
