@@ -105,7 +105,7 @@ Sau rất nhiều thời gian sửa lỗi và [update](https://github.com/nguyen
 
 Đễ dễ dàng sử dụng, em đã tạo ra trình cài đặt cho SpeakAndSpeak giúp mọi người cài đặt một cách đơn giản và dễ dàng.
 
-![Quá trình taoh ra trình cài đặt cho ứng dụng](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-15%2019-47-23.png)
+![Quá trình tạo ra trình cài đặt cho ứng dụng](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-15%2019-47-23.png)
 
 Cuối cùng là viết báo cáo cho sản phẩm là nội dung mà bạn đang đọc.
 
@@ -113,7 +113,7 @@ Cuối cùng là viết báo cáo cho sản phẩm là nội dung mà bạn đan
 
 Cài đặt ứng dụng rất đơn giản, chỉ cần bạn tải trình cài đặt [SpeakAndSpeak-Setup-v1.0.exe](https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/download/SpeakAndSpeak/SpeakAndSpeak-Setup-v1.0.exe) ở [Github Releases](https://github.com/nguyenhhoa03/SpeakAndSpeak/releases/tag/SpeakAndSpeak) và chạy nó. Tiếp theo chỉ cần làm theo hướng dẫn là được. 
 
-|  License | Tạo shortcut | Tóm tắt cài đặt | Đang cài đặt | Hoàn thành |
+|  License | Tạo shortcut (cần thiết) | Tóm tắt cài đặt | Đang cài đặt | Hoàn thành |
 |-------------------------|--------------|-----------------|--------------|------------|
 | ![Phần chấp nhận License](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-26.png) | ![Tạo shortcut](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-32.png) | ![Tóm tắt cài đặt](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-37.png) | ![Đang cài đặt](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-03-44.png) | ![Hoàn thành](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/main/images/Screenshot%20From%202025-09-15%2019-04-01.png) |
 
