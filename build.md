@@ -13,3 +13,10 @@ pip install -r requirements.txt
 ```
 - Giải nén [vosk-model-en-us-0.22-lgraph](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) và [eng_sentences.tsv](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) thay thế vào 2 files **vosk-model-en-us-0.22-lgraph** và **eng_sentences.tsv** trong thư mục `app`
 - Điều hướng `cmd` vào thư mục app
+
+## Linux
+### Yêu cầu 
+- **python3**
+- **git**
+- 
+  
