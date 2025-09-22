@@ -19,5 +19,4 @@ pip install -r requirements.txt
 ### Yêu cầu 
 - **python3**
 - **git**
-- 
-  
+- **wget**
