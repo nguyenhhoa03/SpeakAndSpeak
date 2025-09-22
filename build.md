@@ -19,6 +19,11 @@ Chạy lệnh
 ```cmd
 md dist 2>nul & copy about.png dist\ 2>nul & copy app-config.yaml dist\ 2>nul & copy eng_sentences.tsv dist\ 2>nul & copy user-data.yaml dist\ 2>nul & copy welcome.png dist\ 2>nul & pyinstaller --onefile --noconsole --add-binary "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\Lib\site-packages\vosk\libvosk.dll;vosk" --add-data "vosk-model-en-us-0.22-lgraph;vosk-model-en-us-0.22-lgraph" --add-data "about.png;." --add-data "app-config.yaml;." --add-data "eng_sentences.tsv;." --add-data "user-data.yaml;." --add-data "welcome.png;." --icon "welcome.ico" --hidden-import "PIL._tkinter_finder" --name "SpeakAndSpeak" app.py & cd dist & echo ✅ Build completed! Run with: SpeakAndSpeak.exe & dir
 ```
+### Tạo trình cài đặt
+- Copy các file: `welcome.ico`, `LICENSE`, `SpeakAndSpeak.iss` vào trong thư mục dist
+- Đổi tên file `SpeakAndSpeak.exe` thành `app.exe`
+- Mở file `SpeakAndSpeak.iss` với **Inno Setup**
+- Chọn Build --> Compile
 
 ## Linux
 ### Yêu cầu 
