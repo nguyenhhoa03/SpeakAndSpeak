@@ -2,8 +2,9 @@
 ## Windows
 ### Yêu cầu
 - [Python](https://www.python.org/downloads/)
-- [vosk-model-en-us-0.22-lgraph](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) từ (Alphacephei)
-- [eng_sentences.tsv](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) từ (Tatoeba)
+- [vosk-model-en-us-0.22-lgraph](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) từ Alphacephei
+- [eng_sentences.tsv](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) từ Tatoeba
+- [Inno Setup](https://jrsoftware.org/isdl.php#stable)
 - Trình giải nén: Khuyến nghị dùng [7-zip](https://www.7-zip.org/)
 - Mã nguồn dự án [SpeakAndSpeak](https://github.com/nguyenhhoa03/SpeakAndSpeak/archive/refs/heads/main.zip)
 ### Hướng dẫn build
