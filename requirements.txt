@@ -6,3 +6,4 @@ pyaudio
 pyttsx3
 numpy
 eng_to_ipa
+pyinstaller
