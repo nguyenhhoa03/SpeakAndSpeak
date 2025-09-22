@@ -15,6 +15,11 @@ pip install -r requirements.txt
 - Giải nén [vosk-model-en-us-0.22-lgraph](https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip) và [eng_sentences.tsv](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2) thay thế vào 2 files **vosk-model-en-us-0.22-lgraph** và **eng_sentences.tsv** trong thư mục `app`
 - Điều hướng `cmd` vào thư mục app
 
+Chạy lệnh
+```cmd
+md dist 2>nul & copy about.png dist\ 2>nul & copy app-config.yaml dist\ 2>nul & copy eng_sentences.tsv dist\ 2>nul & copy user-data.yaml dist\ 2>nul & copy welcome.png dist\ 2>nul & pyinstaller --onefile --noconsole --add-binary "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\Lib\site-packages\vosk\libvosk.dll;vosk" --add-data "vosk-model-en-us-0.22-lgraph;vosk-model-en-us-0.22-lgraph" --add-data "about.png;." --add-data "app-config.yaml;." --add-data "eng_sentences.tsv;." --add-data "user-data.yaml;." --add-data "welcome.png;." --icon "welcome.ico" --hidden-import "PIL._tkinter_finder" --name "SpeakAndSpeak" app.py & cd dist & echo ✅ Build completed! Run with: SpeakAndSpeak.exe & dir
+```
+
 ## Linux
 ### Yêu cầu 
 - **python3**
