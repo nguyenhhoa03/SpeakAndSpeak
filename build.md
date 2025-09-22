@@ -20,3 +20,11 @@ pip install -r requirements.txt
 - **python3**
 - **git**
 - **wget**
+ ### Hướng dẫn build
+  Điều hướng terminal đến thư mục làm việc và chạy
+  ```bash
+# Lệnh build SpeakAndSpeak một dòng - copy và paste vào terminal:
+
+git clone https://github.com/nguyenhhoa03/SpeakAndSpeak 2>/dev/null || echo "Repository exists"; cd SpeakAndSpeak; pip install -r requirements.txt; cd app; wget -nc https://alphacephei.com/vosk/models/vosk-model-en-us-0.22-lgraph.zip; wget -nc https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences.tsv.bz2; unzip -o vosk-model-en-us-0.22-lgraph.zip; bunzip2 -f eng_sentences.tsv.bz2; rm -f vosk-model-en-us-0.22-lgraph.zip eng_sentences.tsv.bz2; mkdir -p dist; cp about.png app-config.yaml eng_sentences.tsv user-data.yaml welcome.png dist/ 2>/dev/null || true; pyinstaller --onefile --noconsole --add-binary "$(python -c 'import vosk, os; print(os.path.join(os.path.dirname(vosk.__file__), "libvosk.so"))'):vosk" --add-data "vosk-model-en-us-0.22-lgraph:vosk-model-en-us-0.22-lgraph" --add-data "about.png:." --add-data "app-config.yaml:." --add-data "eng_sentences.tsv:." --add-data "user-data.yaml:." --add-data "welcome.png:." --icon "welcome.ico" --hidden-import "PIL._tkinter_finder" --name "SpeakAndSpeak" app.py; cd dist; echo "✅ Build completed! Run with: ./SpeakAndSpeak"; ls -la
+```
+Vậy là xong.
