@@ -43,8 +43,6 @@ class SpeakAndSpeakApp:
         self.current_sentence = ""
         self.is_recording = False
         self.progress_timer = None
-        self.audio_stream = None
-        self.audio_frames = []
         
         self.create_widgets()
         
@@ -178,8 +176,8 @@ class SpeakAndSpeakApp:
         
         self.record_word_btn = ctk.CTkButton(
             control_frame,
-            text="Start Recording",
-            command=self.toggle_word_recording,
+            text="Record (3s)",
+            command=lambda: self.start_recording(3, self.process_word_recording),
             width=120,
             height=35
         )
@@ -230,8 +228,8 @@ class SpeakAndSpeakApp:
         
         self.record_sentence_btn = ctk.CTkButton(
             control_frame,
-            text="Start Recording",
-            command=self.toggle_sentence_recording,
+            text="Record (7s)",
+            command=lambda: self.start_recording(7, self.process_sentence_recording),
             width=120,
             height=35
         )
@@ -538,39 +536,26 @@ class SpeakAndSpeakApp:
         else:
             raise Exception("Could not initialize TTS engine")
     
-    def toggle_word_recording(self):
-        if not self.is_recording:
-            self.start_recording("word")
-        else:
-            self.stop_recording(self.process_word_recording)
-    
-    def toggle_sentence_recording(self):
-        if not self.is_recording:
-            self.start_recording("sentence")
-        else:
-            self.stop_recording(self.process_sentence_recording)
-    
-    def start_recording(self, mode):
+    def start_recording(self, duration, callback):
         if self.is_recording:
             return
         
+        self.is_recording = True
+        threading.Thread(target=self._record_audio_pyaudio, args=(duration, callback), daemon=True).start()
+    
+    def _record_audio_pyaudio(self, duration, callback):
+        """Record audio using PyAudio"""
         try:
-            self.is_recording = True
-            self.audio_frames = []
+            progress_bar = self.word_progress if duration == 3 else self.sentence_progress
+            status_label = self.word_status if duration == 3 else self.sentence_status
             
-            # Update button text and status
-            if mode == "word":
-                self.record_word_btn.configure(text="Stop Recording")
-                self.word_status.configure(text="Recording... Click Stop to finish")
-            else:
-                self.record_sentence_btn.configure(text="Stop Recording")
-                self.sentence_status.configure(text="Recording... Click Stop to finish")
+            self.root.after(0, lambda: status_label.configure(text="Recording..."))
             
             # Initialize PyAudio
             audio = pyaudio.PyAudio()
             
             # Open stream
-            self.audio_stream = audio.open(
+            stream = audio.open(
                 format=self.audio_format,
                 channels=self.channels,
                 rate=self.rate,
@@ -578,68 +563,42 @@ class SpeakAndSpeakApp:
                 frames_per_buffer=self.chunk
             )
             
-            # Start recording in a separate thread
-            threading.Thread(target=self._continuous_recording, daemon=True).start()
+            frames = []
+            total_frames = int(self.rate / self.chunk * duration)
             
-        except Exception as e:
-            self.is_recording = False
-            error_msg = f"Recording error: {str(e)}"
-            if mode == "word":
-                self.word_status.configure(text=error_msg)
-                self.record_word_btn.configure(text="Start Recording")
-            else:
-                self.sentence_status.configure(text=error_msg)
-                self.record_sentence_btn.configure(text="Start Recording")
-    
-    def stop_recording(self, callback):
-        if not self.is_recording:
-            return
-        
-        self.is_recording = False
-        
-        try:
+            # Record for the specified duration
+            for i in range(total_frames):
+                data = stream.read(self.chunk)
+                frames.append(data)
+                
+                # Update progress bar
+                progress = (i + 1) / total_frames
+                self.root.after(0, lambda p=progress: progress_bar.set(p))
+            
             # Stop and close stream
-            if self.audio_stream:
-                self.audio_stream.stop_stream()
-                self.audio_stream.close()
-                self.audio_stream = None
+            stream.stop_stream()
+            stream.close()
+            audio.terminate()
             
             # Save the recorded data as a WAV file
-            audio = pyaudio.PyAudio()
             with wave.open("audio.wav", 'wb') as wf:
                 wf.setnchannels(self.channels)
                 wf.setsampwidth(audio.get_sample_size(self.audio_format))
                 wf.setframerate(self.rate)
-                wf.writeframes(b''.join(self.audio_frames))
-            audio.terminate()
+                wf.writeframes(b''.join(frames))
             
-            # Reset button text
-            self.record_word_btn.configure(text="Start Recording")
-            self.record_sentence_btn.configure(text="Start Recording")
+            self.root.after(0, lambda: status_label.configure(text="Recording completed!"))
+            self.root.after(0, lambda: progress_bar.set(0))
             
             # Process the recorded audio
             callback()
             
         except Exception as e:
-            error_msg = f"Stop recording error: {str(e)}"
-            self.word_status.configure(text=error_msg)
-            self.sentence_status.configure(text=error_msg)
-    
-    def _continuous_recording(self):
-        """Continuously record audio until stopped"""
-        try:
-            while self.is_recording and self.audio_stream:
-                try:
-                    data = self.audio_stream.read(self.chunk, exception_on_overflow=False)
-                    self.audio_frames.append(data)
-                except Exception as e:
-                    print(f"Recording chunk error: {e}")
-                    break
-        except Exception as e:
-            print(f"Continuous recording error: {e}")
+            error_msg = f"Recording error: {str(e)}"
+            print(error_msg)
+            self.root.after(0, lambda: status_label.configure(text=error_msg))
+        finally:
             self.is_recording = False
-    
-    
     
     def process_word_recording(self):
         self.word_status.configure(text="Processing...")
