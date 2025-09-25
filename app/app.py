@@ -63,13 +63,43 @@ class SpeakAndSpeakApp:
                 "color_scheme": {
                     "available": ["blue", "green", "dark-blue"],
                     "current": "dark-blue"
+                },
+                "speech_rate": {
+                    "words_per_minute": 150,
+                    "min_rate": 60,
+                    "max_rate": 300
                 }
+            }
+            self.save_config()
+        
+        # Ensure speech_rate exists in config
+        if "speech_rate" not in self.config:
+            self.config["speech_rate"] = {
+                "words_per_minute": 150,
+                "min_rate": 60,
+                "max_rate": 300
             }
             self.save_config()
     
     def save_config(self):
         with open("app-config.yaml", "w", encoding="utf-8") as f:
             yaml.dump(self.config, f, default_flow_style=False)
+    
+    def calculate_recording_time(self, text, is_word=True):
+        """Calculate recording time based on text and speech rate"""
+        words_per_minute = self.config["speech_rate"]["words_per_minute"]
+        
+        if is_word:
+            # For single word, use a base time with some buffer
+            base_time = (60 / words_per_minute) * 1  # Time for 1 word
+            recording_time = max(3, int(base_time + 2))  # Minimum 3 seconds with 2s buffer
+        else:
+            # For sentences, count words
+            word_count = len(text.split())
+            base_time = (60 / words_per_minute) * word_count
+            recording_time = max(5, int(base_time + 3))  # Minimum 5 seconds with 3s buffer
+        
+        return recording_time
     
     def create_widgets(self):
         self.tabview = ctk.CTkTabview(self.root, width=880, height=680)
@@ -176,8 +206,8 @@ class SpeakAndSpeakApp:
         
         self.record_word_btn = ctk.CTkButton(
             control_frame,
-            text="Record (3s)",
-            command=lambda: self.start_recording(3, self.process_word_recording),
+            text="Record",
+            command=self.start_word_recording,
             width=120,
             height=35
         )
@@ -228,8 +258,8 @@ class SpeakAndSpeakApp:
         
         self.record_sentence_btn = ctk.CTkButton(
             control_frame,
-            text="Record (7s)",
-            command=lambda: self.start_recording(7, self.process_sentence_recording),
+            text="Record",
+            command=self.start_sentence_recording,
             width=120,
             height=35
         )
@@ -307,6 +337,38 @@ class SpeakAndSpeakApp:
             command=self.change_color_scheme
         )
         color_menu.pack(anchor="w", padx=20, pady=(0, 20))
+        
+        # Speech Rate Setting
+        speech_frame = ctk.CTkFrame(main_frame)
+        speech_frame.pack(fill="x", padx=20, pady=10)
+        
+        speech_label = ctk.CTkLabel(speech_frame, text="Speech Rate (words/minute):", font=ctk.CTkFont(size=16, weight="bold"))
+        speech_label.pack(anchor="w", padx=20, pady=(20, 10))
+        
+        speech_info = ctk.CTkLabel(
+            speech_frame, 
+            text=f"Range: {self.config['speech_rate']['min_rate']}-{self.config['speech_rate']['max_rate']} words/minute",
+            font=ctk.CTkFont(size=12)
+        )
+        speech_info.pack(anchor="w", padx=20, pady=(0, 5))
+        
+        self.speech_rate_var = ctk.StringVar(value=str(self.config["speech_rate"]["words_per_minute"]))
+        speech_entry = ctk.CTkEntry(
+            speech_frame,
+            textvariable=self.speech_rate_var,
+            width=100,
+            placeholder_text="150"
+        )
+        speech_entry.pack(anchor="w", padx=20, pady=(0, 10))
+        
+        apply_speech_btn = ctk.CTkButton(
+            speech_frame,
+            text="Apply Speech Rate",
+            command=self.change_speech_rate,
+            width=150,
+            height=30
+        )
+        apply_speech_btn.pack(anchor="w", padx=20, pady=(0, 20))
         
         image_frame = ctk.CTkFrame(main_frame)
         image_frame.pack(fill="x", padx=20, pady=10)
@@ -419,6 +481,9 @@ class SpeakAndSpeakApp:
         self.current_word = word
         self.word_label.configure(text=self.current_word)
         self.word_result_text.delete("1.0", "end")
+        # Update button text with recording time
+        recording_time = self.calculate_recording_time(word, is_word=True)
+        self.record_word_btn.configure(text=f"Record ({recording_time}s)")
     
     def generate_random_sentence(self):
         try:
@@ -443,6 +508,9 @@ class SpeakAndSpeakApp:
         self.current_sentence = sentence
         self.sentence_label.configure(text=self.current_sentence)
         self.sentence_result_text.delete("1.0", "end")
+        # Update button text with recording time
+        recording_time = self.calculate_recording_time(sentence, is_word=False)
+        self.record_sentence_btn.configure(text=f"Record ({recording_time}s)")
     
     def _create_fresh_tts_engine(self):
         """Tạo TTS engine mới cho mỗi lần sử dụng"""
@@ -536,6 +604,22 @@ class SpeakAndSpeakApp:
         else:
             raise Exception("Could not initialize TTS engine")
     
+    def start_word_recording(self):
+        if not self.current_word:
+            messagebox.showwarning("Warning", "Please generate a word first!")
+            return
+        
+        recording_time = self.calculate_recording_time(self.current_word, is_word=True)
+        self.start_recording(recording_time, self.process_word_recording)
+    
+    def start_sentence_recording(self):
+        if not self.current_sentence:
+            messagebox.showwarning("Warning", "Please generate a sentence first!")
+            return
+        
+        recording_time = self.calculate_recording_time(self.current_sentence, is_word=False)
+        self.start_recording(recording_time, self.process_sentence_recording)
+    
     def start_recording(self, duration, callback):
         if self.is_recording:
             return
@@ -546,10 +630,10 @@ class SpeakAndSpeakApp:
     def _record_audio_pyaudio(self, duration, callback):
         """Record audio using PyAudio"""
         try:
-            progress_bar = self.word_progress if duration == 3 else self.sentence_progress
-            status_label = self.word_status if duration == 3 else self.sentence_status
+            progress_bar = self.word_progress if callback == self.process_word_recording else self.sentence_progress
+            status_label = self.word_status if callback == self.process_word_recording else self.sentence_status
             
-            self.root.after(0, lambda: status_label.configure(text="Recording..."))
+            self.root.after(0, lambda: status_label.configure(text=f"Recording for {duration} seconds..."))
             
             # Initialize PyAudio
             audio = pyaudio.PyAudio()
@@ -672,6 +756,32 @@ class SpeakAndSpeakApp:
         self.config["color_scheme"]["current"] = color_scheme
         self.save_config()
         messagebox.showinfo("Info", "Please restart the app to apply color scheme changes.")
+    
+    def change_speech_rate(self):
+        try:
+            new_rate = int(self.speech_rate_var.get())
+            min_rate = self.config["speech_rate"]["min_rate"]
+            max_rate = self.config["speech_rate"]["max_rate"]
+            
+            if min_rate <= new_rate <= max_rate:
+                self.config["speech_rate"]["words_per_minute"] = new_rate
+                self.save_config()
+                messagebox.showinfo("Success", f"Speech rate updated to {new_rate} words/minute!")
+                
+                # Update button texts if words/sentences are already generated
+                if self.current_word:
+                    recording_time = self.calculate_recording_time(self.current_word, is_word=True)
+                    self.record_word_btn.configure(text=f"Record ({recording_time}s)")
+                
+                if self.current_sentence:
+                    recording_time = self.calculate_recording_time(self.current_sentence, is_word=False)
+                    self.record_sentence_btn.configure(text=f"Record ({recording_time}s)")
+            else:
+                messagebox.showerror("Error", f"Speech rate must be between {min_rate} and {max_rate} words/minute!")
+                self.speech_rate_var.set(str(self.config["speech_rate"]["words_per_minute"]))
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid number!")
+            self.speech_rate_var.set(str(self.config["speech_rate"]["words_per_minute"]))
     
     def change_welcome_image(self):
         file_path = filedialog.askopenfilename(
