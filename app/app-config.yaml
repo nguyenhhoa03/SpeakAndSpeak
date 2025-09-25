@@ -4,6 +4,10 @@ color_scheme:
   - green
   - dark-blue
   current: green
+speech_rate:
+  max_rate: 300
+  min_rate: 60
+  words_per_minute: 150
 theme:
   available:
   - light
