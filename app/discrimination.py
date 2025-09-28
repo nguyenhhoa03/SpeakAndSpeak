@@ -35,6 +35,10 @@ class PhoneticDiscriminationApp:
         self.questions_answered = 0
         self.correct_answers = 0
         
+        # Session tracking for real-time updates
+        self.session_total = 0
+        self.session_correct = 0
+        
         # Load configuration and data
         self.load_config()
         self.load_data()
@@ -165,6 +169,11 @@ class PhoneticDiscriminationApp:
         self.current_mode = self.mode_var.get()
         self.questions_answered = 0
         self.correct_answers = 0
+        
+        # Reset session tracking
+        self.session_total = 0
+        self.session_correct = 0
+        
         self.setup_exercise_interface()
         self.generate_next_question()
         
@@ -183,18 +192,27 @@ class PhoneticDiscriminationApp:
                            font=ctk.CTkFont(size=20, weight="bold"))
         title.pack(pady=20)
         
-        # Progress bar
+        # Progress bar frame
         progress_frame = ctk.CTkFrame(self.root)
         progress_frame.pack(pady=10, padx=50, fill="x")
         
-        self.progress_label = ctk.CTkLabel(progress_frame, text="Accuracy: N/A")
+        # Create progress label and bar
+        self.progress_label = ctk.CTkLabel(progress_frame, text="Session Accuracy: 0/0 (0.0%)")
         self.progress_label.pack(side="left", padx=10)
         
         self.progress_bar = ctk.CTkProgressBar(progress_frame)
         self.progress_bar.pack(side="right", padx=10, fill="x", expand=True)
+        self.progress_bar.set(0)
         
-        # Initialize progress bar with historical data
-        self.update_progress_bar()
+        # Historical accuracy display
+        current_mode_for_stats = self.current_mode if self.current_mode != "both" else "phonetic"
+        total_exercises = len(self.exercise_history[current_mode_for_stats])
+        correct_exercises = sum(1 for ex in self.exercise_history[current_mode_for_stats] if ex.get("correct", False))
+        historical_accuracy = (correct_exercises / total_exercises * 100) if total_exercises > 0 else 0
+        
+        self.historical_label = ctk.CTkLabel(progress_frame, 
+                                           text=f"Historical: {correct_exercises}/{total_exercises} ({historical_accuracy:.1f}%)")
+        self.historical_label.pack(side="left", padx=(20, 10))
         
         # Question frame
         self.question_frame = ctk.CTkFrame(self.root)
@@ -218,6 +236,26 @@ class PhoneticDiscriminationApp:
         
         # Result frame (initially hidden)
         self.result_frame = ctk.CTkFrame(self.root)
+        
+    def update_progress_display(self):
+        """Update the progress bar and labels with current session data"""
+        # Calculate session accuracy
+        session_accuracy = (self.session_correct / self.session_total * 100) if self.session_total > 0 else 0
+        
+        # Update progress label
+        self.progress_label.configure(text=f"Session Accuracy: {self.session_correct}/{self.session_total} ({session_accuracy:.1f}%)")
+        
+        # Update progress bar
+        progress_value = session_accuracy / 100 if self.session_total > 0 else 0
+        self.progress_bar.set(progress_value)
+        
+        # Update historical accuracy (in case new data was added)
+        current_mode_for_stats = self.current_mode if self.current_mode != "both" else "phonetic"
+        total_exercises = len(self.exercise_history[current_mode_for_stats])
+        correct_exercises = sum(1 for ex in self.exercise_history[current_mode_for_stats] if ex.get("correct", False))
+        historical_accuracy = (correct_exercises / total_exercises * 100) if total_exercises > 0 else 0
+        
+        self.historical_label.configure(text=f"Historical: {correct_exercises}/{total_exercises} ({historical_accuracy:.1f}%)")
         
     def clear_window(self):
         """Clear all widgets from the window"""
@@ -375,12 +413,12 @@ class PhoneticDiscriminationApp:
                 }
             else:
                 # Ultimate fallback
-                options = [('cat', 0, 'æ'), ('bat', 0, 'æ'), ('hat', 0, 'æ'), ('beat', 0, 'i')]
+                options = [('cat', 0, 'Ã¦'), ('bat', 0, 'Ã¦'), ('hat', 0, 'Ã¦'), ('beat', 0, 'i')]
                 self.current_question = {
                     'type': 'phonetic',
                     'options': options,
                     'correct_answer': 3,
-                    'target_ipa': 'æ',
+                    'target_ipa': 'Ã¦',
                     'different_ipa': 'i'
                 }
                 
@@ -568,6 +606,14 @@ class PhoneticDiscriminationApp:
         if is_correct:
             self.correct_answers += 1
             
+        # Update session tracking
+        self.session_total += 1
+        if is_correct:
+            self.session_correct += 1
+            
+        # Update progress display immediately
+        self.update_progress_display()
+        
         # Save to history
         exercise_type = self.current_question['type']
         exercise_record = {
@@ -583,9 +629,6 @@ class PhoneticDiscriminationApp:
         
         self.exercise_history[exercise_type].append(exercise_record)
         self.save_exercise_history()
-        
-        # Update progress bar immediately after checking answer
-        self.update_progress_bar()
         
         # Show result
         self.show_result(is_correct)
@@ -658,22 +701,7 @@ class PhoneticDiscriminationApp:
                               width=150, height=30)
             btn.pack(side="left", padx=5, pady=5)
             
-    def update_progress_bar(self):
-        """Update progress bar with current accuracy"""
-        # Determine which exercise history to use for current mode
-        if self.current_mode == "both":
-            # For mixed mode, combine both types
-            all_exercises = self.exercise_history["phonetic"] + self.exercise_history["stress"]
-        else:
-            all_exercises = self.exercise_history[self.current_mode]
-            
-        total_exercises = len(all_exercises)
-        correct_exercises = sum(1 for ex in all_exercises if ex.get("correct", False))
-        accuracy = (correct_exercises / total_exercises * 100) if total_exercises > 0 else 0
-        
-        # Update progress bar and label
-        self.progress_bar.set(accuracy / 100)
-        self.progress_label.configure(text=f"Accuracy: {correct_exercises}/{total_exercises} ({accuracy:.1f}%)")
+    def play_pronunciation(self, word):
         """Play pronunciation of a word using text-to-speech"""
         def speak():
             try:
