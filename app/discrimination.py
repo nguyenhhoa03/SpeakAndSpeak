@@ -17,7 +17,7 @@ class PhoneticDiscriminationApp:
         # Initialize the app
         self.root = ctk.CTk()
         self.root.title("Phonetic Discrimination Exercise")
-        self.root.geometry("800x600")
+        self.root.geometry("800x650")
         
         # Initialize text-to-speech
         self.tts = pyttsx3.init()
