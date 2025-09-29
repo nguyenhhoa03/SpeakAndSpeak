@@ -94,12 +94,12 @@ class SpeakAndSpeakApp:
         if is_word:
             # For single word, use a base time with some buffer
             base_time = (60 / words_per_minute) * 1  # Time for 1 word
-            recording_time = max(3, int(base_time + 2))  # Minimum 3 seconds with 2s buffer
+            recording_time = max(2, int(base_time + 1))  # Minimum 2 seconds with 1s buffer
         else:
             # For sentences, count words
             word_count = len(text.split())
             base_time = (60 / words_per_minute) * word_count
-            recording_time = max(5, int(base_time + 3))  # Minimum 5 seconds with 3s buffer
+            recording_time = max(4, int(base_time + 2))  # Minimum 4 seconds with 2s buffer
         
         return recording_time
     
@@ -439,7 +439,7 @@ class SpeakAndSpeakApp:
         
         version_label = ctk.CTkLabel(
             main_frame,
-            text="version 1.0",
+            text="version 1.1",
             font=ctk.CTkFont(size=16)
         )
         version_label.pack(pady=10)
