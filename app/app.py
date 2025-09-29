@@ -11,6 +11,8 @@ from PIL import Image
 import time
 import pyaudio
 import wave
+import subprocess
+import sys
 
 from non_random_word import generate_word
 from non_random_sentence import generate_sentence
@@ -25,7 +27,7 @@ class SpeakAndSpeakApp:
         
         self.root = ctk.CTk()
         self.root.title("Speak & Speak - English Pronunciation Practice")
-        self.root.geometry("900x700")
+        self.root.geometry("900x800")
         self.root.resizable(True, True)
         
         self.load_config()
@@ -106,14 +108,14 @@ class SpeakAndSpeakApp:
         self.tabview.pack(fill="both", expand=True, padx=10, pady=10)
         
         self.welcome_tab = self.tabview.add("Welcome")
-        self.word_tab = self.tabview.add("Word")
+        self.exercise_tab = self.tabview.add("Exercise")
         self.sentence_tab = self.tabview.add("Sentence")
         self.statistics_tab = self.tabview.add("Statistics")
         self.settings_tab = self.tabview.add("Settings")
         self.about_tab = self.tabview.add("About")
         
         self.setup_welcome_tab()
-        self.setup_word_tab()
+        self.setup_exercise_tab()
         self.setup_sentence_tab()
         self.setup_statistics_tab()
         self.setup_settings_tab()
@@ -152,15 +154,15 @@ class SpeakAndSpeakApp:
         button_frame = ctk.CTkFrame(main_frame)
         button_frame.pack(pady=30)
         
-        word_button = ctk.CTkButton(
+        exercise_button = ctk.CTkButton(
             button_frame,
-            text="Word",
+            text="Exercise",
             font=ctk.CTkFont(size=18, weight="bold"),
             width=150,
             height=50,
-            command=lambda: self.tabview.set("Word")
+            command=lambda: self.tabview.set("Exercise")
         )
-        word_button.pack(side="left", padx=20, pady=20)
+        exercise_button.pack(side="left", padx=20, pady=20)
         
         sentence_button = ctk.CTkButton(
             button_frame,
@@ -172,56 +174,77 @@ class SpeakAndSpeakApp:
         )
         sentence_button.pack(side="left", padx=20, pady=20)
     
-    def setup_word_tab(self):
-        main_frame = ctk.CTkFrame(self.word_tab)
+    def setup_exercise_tab(self):
+        main_frame = ctk.CTkFrame(self.exercise_tab)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        self.word_label = ctk.CTkLabel(
+        # Icon/Image
+        try:
+            exercise_img = Image.open("exercise.png")
+            exercise_w, exercise_h = exercise_img.size
+            new_exercise_w = 200
+            new_exercise_h = int(exercise_h * (new_exercise_w / exercise_w))
+            exercise_image = ctk.CTkImage(exercise_img, size=(new_exercise_w, new_exercise_h))
+            
+            image_label = ctk.CTkLabel(main_frame, image=exercise_image, text="")
+            image_label.pack(pady=(50, 20))
+        except FileNotFoundError:
+            icon_label = ctk.CTkLabel(
+                main_frame, 
+                text="📝",
+                font=ctk.CTkFont(size=100),
+                width=200,
+                height=150
+            )
+            icon_label.pack(pady=(50, 20))
+        
+        # Title
+        title_label = ctk.CTkLabel(
             main_frame,
-            text="Click 'Random Word' to start!",
-            font=ctk.CTkFont(size=36, weight="bold")
+            text="Pronunciation Discrimination Exercise",
+            font=ctk.CTkFont(size=28, weight="bold")
         )
-        self.word_label.pack(pady=30)
+        title_label.pack(pady=20)
         
-        control_frame = ctk.CTkFrame(main_frame)
-        control_frame.pack(pady=20)
-        
-        random_word_btn = ctk.CTkButton(
-            control_frame,
-            text="Random Word",
-            command=self.generate_random_word,
-            width=120,
-            height=35
+        # Description
+        description_text = (
+            "Practice your pronunciation discrimination skills!\n\n"
+            "In this exercise, you will:\n"
+            "• Listen to pairs of words\n"
+            "• Determine if they sound the same or different\n"
+            "• Choose from multiple choice answers (A, B, C, D)\n"
+            "• Get instant feedback on your answers\n\n"
+            "This exercise helps improve your ability to distinguish\n"
+            "between similar-sounding English words."
         )
-        random_word_btn.pack(side="left", padx=10, pady=10)
         
-        listen_word_btn = ctk.CTkButton(
-            control_frame,
-            text="Listen",
-            command=self.speak_word,
-            width=100,
-            height=35
+        description_label = ctk.CTkLabel(
+            main_frame,
+            text=description_text,
+            font=ctk.CTkFont(size=16),
+            justify="left"
         )
-        listen_word_btn.pack(side="left", padx=10, pady=10)
+        description_label.pack(pady=30)
         
-        self.record_word_btn = ctk.CTkButton(
-            control_frame,
-            text="Record",
-            command=self.start_word_recording,
-            width=120,
-            height=35
+        # Start Button
+        start_button = ctk.CTkButton(
+            main_frame,
+            text="Start Exercise",
+            font=ctk.CTkFont(size=20, weight="bold"),
+            width=200,
+            height=60,
+            command=self.start_discrimination_exercise
         )
-        self.record_word_btn.pack(side="left", padx=10, pady=10)
+        start_button.pack(pady=30)
         
-        self.word_progress = ctk.CTkProgressBar(main_frame, width=600)
-        self.word_progress.pack(pady=10)
-        self.word_progress.set(0)
-        
-        self.word_status = ctk.CTkLabel(main_frame, text="", font=ctk.CTkFont(size=14))
-        self.word_status.pack(pady=10)
-        
-        self.word_result_text = ctk.CTkTextbox(main_frame, wrap="word", width=750, height=300)
-        self.word_result_text.pack(fill="x", pady=20)
+        # Status Label
+        self.exercise_status = ctk.CTkLabel(
+            main_frame,
+            text="",
+            font=ctk.CTkFont(size=14),
+            text_color=("gray50", "gray70")
+        )
+        self.exercise_status.pack(pady=10)
     
     def setup_sentence_tab(self):
         main_frame = ctk.CTkFrame(self.sentence_tab)
@@ -431,6 +454,32 @@ class SpeakAndSpeakApp:
         github_link.pack(pady=20)
         github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/nguyenhhoa03/SpeakAndSpeak"))
     
+    def start_discrimination_exercise(self):
+        """Launch the discrimination.py script"""
+        try:
+            self.exercise_status.configure(text="Starting exercise...")
+            
+            # Check if discrimination.py exists
+            if not os.path.exists("discrimination.py"):
+                messagebox.showerror("Error", "discrimination.py file not found!")
+                self.exercise_status.configure(text="Error: File not found")
+                return
+            
+            # Run discrimination.py in a separate process
+            if platform.system() == "Windows":
+                subprocess.Popen([sys.executable, "discrimination.py"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+            else:
+                subprocess.Popen([sys.executable, "discrimination.py"])
+            
+            self.exercise_status.configure(text="Exercise started successfully!")
+            
+            # Clear status after 3 seconds
+            self.root.after(3000, lambda: self.exercise_status.configure(text=""))
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to start exercise: {str(e)}")
+            self.exercise_status.configure(text=f"Error: {str(e)}")
+    
     def start_fake_progress(self, progress_bar, interval=1.0):
         if self.progress_timer:
             self.progress_timer.cancel()
@@ -457,33 +506,6 @@ class SpeakAndSpeakApp:
             self.progress_timer = None
         progress_bar.set(1.0)
         threading.Timer(0.5, lambda: progress_bar.set(0)).start()
-    
-    def generate_random_word(self):
-        try:
-            self.word_status.configure(text="Generating word...")
-            self.start_fake_progress(self.word_progress, interval=1.0)
-            
-            def generate_word_thread():
-                try:
-                    word = generate_word("user-data.yaml")
-                    self.root.after(0, lambda: self._update_word_generated(word))
-                except Exception as e:
-                    self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate word: {str(e)}"))
-                finally:
-                    self.root.after(0, lambda: self.complete_progress(self.word_progress))
-                    self.root.after(0, lambda: self.word_status.configure(text=""))
-            
-            threading.Thread(target=generate_word_thread).start()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate word: {str(e)}")
-    
-    def _update_word_generated(self, word):
-        self.current_word = word
-        self.word_label.configure(text=self.current_word)
-        self.word_result_text.delete("1.0", "end")
-        # Update button text with recording time
-        recording_time = self.calculate_recording_time(word, is_word=True)
-        self.record_word_btn.configure(text=f"Record ({recording_time}s)")
     
     def generate_random_sentence(self):
         try:
@@ -547,25 +569,6 @@ class SpeakAndSpeakApp:
             print(f"TTS Engine creation error: {e}")
             return None
     
-    def speak_word(self):
-        if self.current_word:
-            self.word_status.configure(text="Speaking...")
-            self.start_fake_progress(self.word_progress, interval=1.0)
-            
-            def speak_thread():
-                try:
-                    self._speak_text(self.current_word)
-                except Exception as e:
-                    print(f"TTS Error: {e}")
-                    self.root.after(0, lambda: self.word_status.configure(text=f"TTS Error: {e}"))
-                finally:
-                    self.root.after(0, lambda: self.complete_progress(self.word_progress))
-                    self.root.after(0, lambda: self.word_status.configure(text=""))
-            
-            threading.Thread(target=speak_thread, daemon=True).start()
-        else:
-            messagebox.showwarning("Warning", "Please generate a word first!")
-    
     def speak_sentence(self):
         if self.current_sentence:
             self.sentence_status.configure(text="Speaking...")
@@ -604,14 +607,6 @@ class SpeakAndSpeakApp:
         else:
             raise Exception("Could not initialize TTS engine")
     
-    def start_word_recording(self):
-        if not self.current_word:
-            messagebox.showwarning("Warning", "Please generate a word first!")
-            return
-        
-        recording_time = self.calculate_recording_time(self.current_word, is_word=True)
-        self.start_recording(recording_time, self.process_word_recording)
-    
     def start_sentence_recording(self):
         if not self.current_sentence:
             messagebox.showwarning("Warning", "Please generate a sentence first!")
@@ -630,8 +625,8 @@ class SpeakAndSpeakApp:
     def _record_audio_pyaudio(self, duration, callback):
         """Record audio using PyAudio"""
         try:
-            progress_bar = self.word_progress if callback == self.process_word_recording else self.sentence_progress
-            status_label = self.word_status if callback == self.process_word_recording else self.sentence_status
+            progress_bar = self.sentence_progress
+            status_label = self.sentence_status
             
             self.root.after(0, lambda: status_label.configure(text=f"Recording for {duration} seconds..."))
             
@@ -683,29 +678,6 @@ class SpeakAndSpeakApp:
             self.root.after(0, lambda: status_label.configure(text=error_msg))
         finally:
             self.is_recording = False
-    
-    def process_word_recording(self):
-        self.word_status.configure(text="Processing...")
-        self.start_fake_progress(self.word_progress, interval=1.0)
-        threading.Thread(target=self._process_word_audio, daemon=True).start()
-    
-    def _process_word_audio(self):
-        try:
-            transcribed_text = transcribe_audio("audio.wav")
-            result = assess_pronunciation(self.current_word, transcribed_text)
-            
-            self.root.after(0, lambda: self._update_word_result(result))
-            self.root.after(0, lambda: self.complete_progress(self.word_progress))
-            self.root.after(0, lambda: self.word_status.configure(text="Processing completed!"))
-            
-        except Exception as e:
-            error_msg = f"Error: {e}"
-            self.root.after(0, lambda: self.complete_progress(self.word_progress))
-            self.root.after(0, lambda msg=error_msg: self.word_status.configure(text=msg))
-    
-    def _update_word_result(self, result):
-        self.word_result_text.delete("1.0", "end")
-        self.word_result_text.insert("1.0", result)
     
     def process_sentence_recording(self):
         self.sentence_status.configure(text="Processing...")
@@ -768,11 +740,7 @@ class SpeakAndSpeakApp:
                 self.save_config()
                 messagebox.showinfo("Success", f"Speech rate updated to {new_rate} words/minute!")
                 
-                # Update button texts if words/sentences are already generated
-                if self.current_word:
-                    recording_time = self.calculate_recording_time(self.current_word, is_word=True)
-                    self.record_word_btn.configure(text=f"Record ({recording_time}s)")
-                
+                # Update button texts if sentences are already generated
                 if self.current_sentence:
                     recording_time = self.calculate_recording_time(self.current_sentence, is_word=False)
                     self.record_sentence_btn.configure(text=f"Record ({recording_time}s)")
