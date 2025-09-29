@@ -316,7 +316,7 @@ class PhoneticDiscriminationApp:
             try:
                 # Generate random words
                 words = []
-                for _ in range(20):  # Generate more words to have options
+                for _ in range(30):  # Generate more words to have options
                     word = self.word_generator.word()
                     if word and len(word) > 2:
                         words.append(word.lower())
@@ -341,8 +341,9 @@ class PhoneticDiscriminationApp:
                 # Find suitable question set
                 question_found = False
                 
-                # Try to use confusion groups
-                for group in self.ipa_confusion_groups:
+                # Try to use confusion groups (randomized order)
+                shuffled_groups = random.sample(self.ipa_confusion_groups, len(self.ipa_confusion_groups))
+                for group in shuffled_groups:
                     if question_found:
                         break
                         
@@ -353,15 +354,15 @@ class PhoneticDiscriminationApp:
                             if ipa_sound in group:
                                 group_words[ipa_sound].append((word_info, i))
                                 
-                    # Try to create a question from this group
-                    for target_sound in group:
+                    # Try to create a question from this group (randomized order)
+                    shuffled_sounds = random.sample(group, len(group))
+                    for target_sound in shuffled_sounds:
                         if len(group_words[target_sound]) >= 3:
-                            # Find a different sound from the same group
+                            # Find a different sound from the same group (randomized)
                             different_sound = None
-                            for other_sound in group:
-                                if other_sound != target_sound and len(group_words[other_sound]) >= 1:
-                                    different_sound = other_sound
-                                    break
+                            other_sounds = [s for s in group if s != target_sound and len(group_words[s]) >= 1]
+                            if other_sounds:
+                                different_sound = random.choice(other_sounds)
                                     
                             if different_sound:
                                 # Create question
