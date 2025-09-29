@@ -306,17 +306,63 @@ class PhoneticDiscriminationApp:
                     
             return error_rates
         return {}
+    
+    def get_letter_representation(self, word, phone_index, arpabet):
+        """
+        Find which letter(s) in the word correspond to a phoneme
+        Returns start_pos, end_pos, and the letter string
+        """
+        # Common phoneme-to-letter patterns
+        phoneme_patterns = {
+            'AE': ['a'], 'AA': ['o', 'a'], 'AH': ['u', 'o', 'a'], 'AO': ['aw', 'au', 'o'],
+            'AW': ['ow', 'ou'], 'AY': ['i', 'y', 'igh', 'ie'], 'B': ['b', 'bb'],
+            'CH': ['ch', 'tch', 't'], 'D': ['d', 'dd', 'ed'], 'DH': ['th'],
+            'EH': ['e', 'ea'], 'ER': ['er', 'ir', 'ur', 'or', 'ar'], 'EY': ['a', 'ai', 'ay', 'ea', 'ei'],
+            'F': ['f', 'ff', 'ph', 'gh'], 'G': ['g', 'gg', 'gh'], 'HH': ['h', 'wh'],
+            'IH': ['i', 'y', 'e'], 'IY': ['ee', 'ea', 'e', 'ie', 'y', 'i'], 'JH': ['j', 'g', 'dge'],
+            'K': ['c', 'k', 'ck', 'ch', 'q'], 'L': ['l', 'll'], 'M': ['m', 'mm'],
+            'N': ['n', 'nn', 'kn', 'gn'], 'NG': ['ng', 'n'], 'OW': ['o', 'oa', 'ow', 'oe'],
+            'OY': ['oi', 'oy'], 'P': ['p', 'pp'], 'R': ['r', 'rr', 'wr'],
+            'S': ['s', 'ss', 'c', 'ce'], 'SH': ['sh', 'ti', 'ci', 'ch'], 'T': ['t', 'tt', 'ed'],
+            'TH': ['th'], 'UH': ['oo', 'u', 'ou'], 'UW': ['oo', 'u', 'ue', 'ew', 'ou'],
+            'V': ['v', 'f'], 'W': ['w', 'wh', 'u'], 'Y': ['y'], 'Z': ['z', 'zz', 's'],
+            'ZH': ['s', 'si', 'z']
+        }
+        
+        # Get the phoneme (remove stress markers)
+        phoneme = re.sub(r'[0-2]', '', arpabet[phone_index])
+        
+        # Get possible letter patterns
+        patterns = phoneme_patterns.get(phoneme, [phoneme.lower()])
+        
+        # Try to find the pattern in the word
+        # Start from the approximate position based on phoneme index
+        estimated_pos = int(len(word) * phone_index / len(arpabet))
+        
+        # Search around the estimated position
+        search_start = max(0, estimated_pos - 2)
+        search_end = min(len(word), estimated_pos + 4)
+        
+        for pattern in patterns:
+            for i in range(search_start, search_end):
+                if i + len(pattern) <= len(word):
+                    if word[i:i+len(pattern)].lower() == pattern:
+                        return i, i + len(pattern), word[i:i+len(pattern)]
+        
+        # Fallback: return single letter at estimated position
+        pos = min(estimated_pos, len(word) - 1)
+        return pos, pos + 1, word[pos]
         
     def generate_phonetic_question(self, target_ipa_sounds=None):
-        """Generate a phonetic discrimination question"""
+        """Generate a phonetic discrimination question with same spelling for underlined parts"""
         attempts = 0
-        max_attempts = 50
+        max_attempts = 100
         
         while attempts < max_attempts:
             try:
                 # Generate random words
                 words = []
-                for _ in range(30):  # Generate more words to have options
+                for _ in range(50):  # Generate more words to have options
                     word = self.word_generator.word()
                     if word and len(word) > 2:
                         words.append(word.lower())
@@ -337,92 +383,165 @@ class PhoneticDiscriminationApp:
                 if len(word_data) < 4:
                     attempts += 1
                     continue
-                    
-                # Find suitable question set
+                
+                # Find suitable question set with SAME LETTER(S) but different sounds
                 question_found = False
                 
-                # Try to use confusion groups (randomized order)
+                # Try to use confusion groups
                 shuffled_groups = random.sample(self.ipa_confusion_groups, len(self.ipa_confusion_groups))
                 for group in shuffled_groups:
                     if question_found:
                         break
-                        
+                    
                     # Find words with sounds from this confusion group
-                    group_words = defaultdict(list)
+                    # Group by letter representation
+                    letter_sound_map = defaultdict(lambda: defaultdict(list))
+                    
                     for word_info in word_data:
                         for i, ipa_sound in enumerate(word_info['ipa']):
                             if ipa_sound in group:
-                                group_words[ipa_sound].append((word_info, i))
-                                
-                    # Try to create a question from this group (randomized order)
-                    shuffled_sounds = random.sample(group, len(group))
-                    for target_sound in shuffled_sounds:
-                        if len(group_words[target_sound]) >= 3:
-                            # Find a different sound from the same group (randomized)
-                            different_sound = None
-                            other_sounds = [s for s in group if s != target_sound and len(group_words[s]) >= 1]
-                            if other_sounds:
-                                different_sound = random.choice(other_sounds)
-                                    
-                            if different_sound:
-                                # Create question
-                                correct_words = random.sample(group_words[target_sound], 3)
-                                incorrect_word = random.choice(group_words[different_sound])
-                                
-                                options = [
-                                    (word_info['word'], pos, target_sound) for word_info, pos in correct_words
-                                ] + [(incorrect_word[0]['word'], incorrect_word[1], different_sound)]
-                                
-                                random.shuffle(options)
-                                
-                                correct_answer = None
-                                for i, (word, pos, sound) in enumerate(options):
-                                    if sound == different_sound:
-                                        correct_answer = i
-                                        break
+                                # Get letter representation
+                                start, end, letters = self.get_letter_representation(
+                                    word_info['word'], i, word_info['arpabet']
+                                )
+                                letters_lower = letters.lower()
+                                letter_sound_map[letters_lower][ipa_sound].append({
+                                    'word_info': word_info,
+                                    'phone_index': i,
+                                    'start': start,
+                                    'end': end,
+                                    'letters': letters
+                                })
+                    
+                    # Look for letter patterns that have multiple sounds
+                    for letter_pattern, sounds_dict in letter_sound_map.items():
+                        if len(sounds_dict) >= 2:  # Same letters, different sounds
+                            sounds_list = list(sounds_dict.keys())
+                            
+                            # Find a combination where we have 3+ words with one sound
+                            # and 1+ word with a different sound
+                            for i, target_sound in enumerate(sounds_list):
+                                for j, different_sound in enumerate(sounds_list):
+                                    if i != j:
+                                        target_words = sounds_dict[target_sound]
+                                        different_words = sounds_dict[different_sound]
                                         
-                                self.current_question = {
-                                    'type': 'phonetic',
-                                    'options': options,
-                                    'correct_answer': correct_answer,
-                                    'target_ipa': target_sound,
-                                    'different_ipa': different_sound
-                                }
-                                question_found = True
-                                break
+                                        if len(target_words) >= 3 and len(different_words) >= 1:
+                                            # Create question
+                                            correct_selections = random.sample(target_words, 3)
+                                            incorrect_selection = random.choice(different_words)
+                                            
+                                            options = []
+                                            for sel in correct_selections:
+                                                options.append((
+                                                    sel['word_info']['word'],
+                                                    sel['start'],
+                                                    sel['end'],
+                                                    sel['letters'],
+                                                    target_sound
+                                                ))
+                                            
+                                            options.append((
+                                                incorrect_selection['word_info']['word'],
+                                                incorrect_selection['start'],
+                                                incorrect_selection['end'],
+                                                incorrect_selection['letters'],
+                                                different_sound
+                                            ))
+                                            
+                                            random.shuffle(options)
+                                            
+                                            # Find correct answer index
+                                            correct_answer = None
+                                            for idx, (word, start, end, letters, sound) in enumerate(options):
+                                                if sound == different_sound:
+                                                    correct_answer = idx
+                                                    break
+                                            
+                                            self.current_question = {
+                                                'type': 'phonetic',
+                                                'options': options,
+                                                'correct_answer': correct_answer,
+                                                'target_ipa': target_sound,
+                                                'different_ipa': different_sound,
+                                                'letter_pattern': letter_pattern
+                                            }
+                                            question_found = True
+                                            break
                                 
+                                if question_found:
+                                    break
+                        
+                        if question_found:
+                            break
+                
                 if question_found:
                     break
-                    
+                
                 attempts += 1
                 
             except Exception as e:
                 attempts += 1
                 continue
-                
+        
+        # Fallback questions with same spelling but different pronunciation
         if not question_found:
-            # Fallback: create a simple question
-            if len(word_data) >= 4:
-                selected = random.sample(word_data, 4)
-                options = [(w['word'], 0, w['ipa'][0] if w['ipa'] else '') for w in selected]
-                self.current_question = {
-                    'type': 'phonetic',
-                    'options': options,
-                    'correct_answer': random.randint(0, 3),
-                    'target_ipa': 'fallback',
-                    'different_ipa': 'fallback'
+            # Example: 'ea' can be pronounced as /i/ or /ɛ/
+            fallback_questions = [
+                {
+                    'options': [
+                        ('read', 1, 3, 'ea', 'i'),  # /ri:d/ (present)
+                        ('bead', 1, 3, 'ea', 'i'),
+                        ('lead', 1, 3, 'ea', 'i'),  # /li:d/ (metal)
+                        ('bread', 2, 4, 'ea', 'ɛ')  # /brɛd/
+                    ],
+                    'target_ipa': 'i',
+                    'different_ipa': 'ɛ',
+                    'letter_pattern': 'ea'
+                },
+                {
+                    'options': [
+                        ('bow', 1, 2, 'ow', 'aʊ'),  # /baʊ/ (to bend)
+                        ('cow', 1, 2, 'ow', 'aʊ'),
+                        ('now', 1, 2, 'ow', 'aʊ'),
+                        ('low', 1, 2, 'ow', 'oʊ')   # /loʊ/
+                    ],
+                    'target_ipa': 'aʊ',
+                    'different_ipa': 'oʊ',
+                    'letter_pattern': 'ow'
+                },
+                {
+                    'options': [
+                        ('food', 1, 3, 'oo', 'u'),
+                        ('moon', 1, 3, 'oo', 'u'),
+                        ('pool', 1, 3, 'oo', 'u'),
+                        ('book', 1, 3, 'oo', 'ʊ')
+                    ],
+                    'target_ipa': 'u',
+                    'different_ipa': 'ʊ',
+                    'letter_pattern': 'oo'
                 }
-            else:
-                # Ultimate fallback
-                options = [('cat', 0, 'Ã¦'), ('bat', 0, 'Ã¦'), ('hat', 0, 'Ã¦'), ('beat', 0, 'i')]
-                self.current_question = {
-                    'type': 'phonetic',
-                    'options': options,
-                    'correct_answer': 3,
-                    'target_ipa': 'Ã¦',
-                    'different_ipa': 'i'
-                }
-                
+            ]
+            
+            fallback = random.choice(fallback_questions)
+            random.shuffle(fallback['options'])
+            
+            # Find correct answer
+            correct_answer = None
+            for i, (word, start, end, letters, sound) in enumerate(fallback['options']):
+                if sound == fallback['different_ipa']:
+                    correct_answer = i
+                    break
+            
+            self.current_question = {
+                'type': 'phonetic',
+                'options': fallback['options'],
+                'correct_answer': correct_answer,
+                'target_ipa': fallback['target_ipa'],
+                'different_ipa': fallback['different_ipa'],
+                'letter_pattern': fallback['letter_pattern']
+            }
+            
     def generate_stress_question(self):
         """Generate a stress pattern recognition question"""
         attempts = 0
@@ -497,7 +616,7 @@ class PhoneticDiscriminationApp:
                                 
                         self.current_question = {
                             'type': 'stress',
-                            'options': [(word, 0, '') for word in options],  # Consistent format
+                            'options': [(word, 0, 0, '', '') for word in options],
                             'correct_answer': correct_answer,
                             'target_stress_position': target_stress_pos,
                             'target_syllables': target_syllables
@@ -512,7 +631,7 @@ class PhoneticDiscriminationApp:
                 
         # Fallback stress question
         if not hasattr(self, 'current_question') or self.current_question is None:
-            options = [('photograph', 0, ''), ('photography', 0, ''), ('photographer', 0, ''), ('computer', 0, '')]
+            options = [('photograph', 0, 0, '', ''), ('photography', 0, 0, '', ''), ('photographer', 0, 0, '', ''), ('computer', 0, 0, '', '')]
             self.current_question = {
                 'type': 'stress',
                 'options': options,
@@ -570,13 +689,20 @@ class PhoneticDiscriminationApp:
         self.option_var = ctk.StringVar()
         self.option_buttons = []
         
-        for i, (word, pos, ipa) in enumerate(self.current_question['options']):
+        for i, option_data in enumerate(self.current_question['options']):
             if question_type == "phonetic":
                 # For phonetic questions, show underlined part
-                display_word = self.create_underlined_word(word, pos, ipa)
+                word = option_data[0]
+                start = option_data[1]
+                end = option_data[2]
+                letters = option_data[3]
+                
+                # Create display with underlined section
+                display_word = self.create_underlined_word_display(word, start, end)
                 text = f"{chr(65+i)}. {display_word}"
             else:
                 # For stress questions, show word with stress marks
+                word = option_data[0]
                 text = f"{chr(65+i)}. {word}"
                 
             btn = ctk.CTkRadioButton(self.question_frame, text=text, 
@@ -585,12 +711,13 @@ class PhoneticDiscriminationApp:
             btn.pack(pady=5, anchor="w", padx=50)
             self.option_buttons.append(btn)
             
-    def create_underlined_word(self, word, pos, ipa):
-        """Create word with underlined part (simplified representation)"""
-        # This is a simplified version - in a real app you might want 
-        # more sophisticated phoneme-to-letter mapping
-        if pos < len(word):
-            return f"{word[:pos]}[{word[pos]}]{word[pos+1:]}"
+    def create_underlined_word_display(self, word, start, end):
+        """Create word with underlined part using brackets"""
+        if start < len(word) and end <= len(word):
+            before = word[:start]
+            underlined = word[start:end]
+            after = word[end:]
+            return f"{before}[{underlined}]{after}"
         return f"[{word[0]}]{word[1:]}"
         
     def check_answer(self):
@@ -680,7 +807,12 @@ class PhoneticDiscriminationApp:
         if question_type == 'phonetic':
             target_ipa = self.current_question.get('target_ipa', '')
             different_ipa = self.current_question.get('different_ipa', '')
-            return f"The target sound is /{target_ipa}/, while the different word has /{different_ipa}/."
+            letter_pattern = self.current_question.get('letter_pattern', '')
+            
+            if letter_pattern:
+                return f"All words have '{letter_pattern}' but three pronounce it as /{target_ipa}/, while one pronounces it as /{different_ipa}/."
+            else:
+                return f"The target sound is /{target_ipa}/, while the different word has /{different_ipa}/."
         else:
             target_pos = self.current_question.get('target_stress_position', 0)
             return f"Three words have primary stress on syllable {target_pos + 1}, while one is different."
@@ -696,7 +828,8 @@ class PhoneticDiscriminationApp:
         play_label = ctk.CTkLabel(button_frame, text="Listen to pronunciations:")
         play_label.pack(pady=5)
         
-        for i, (word, _, _) in enumerate(self.current_question['options']):
+        for i, option_data in enumerate(self.current_question['options']):
+            word = option_data[0]
             btn = ctk.CTkButton(button_frame, text=f"Play {chr(65+i)}: {word}",
                               command=lambda w=word: self.play_pronunciation(w),
                               width=150, height=30)
