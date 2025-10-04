@@ -49,7 +49,7 @@ Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; Start Menu shortcuts
 Name: "{group}\SpeakAndSpeak"; Filename: "{app}\app.exe"; IconFilename: "{app}\welcome.ico"; Comment: "Launch SpeakAndSpeak Application"
 Name: "{group}\Uninstall SpeakAndSpeak"; Filename: "{uninstallexe}"; IconFilename: "{app}\welcome.ico"; Comment: "Uninstall SpeakAndSpeak"
-Name: "{group}\About SpeakAndSpeak"; Filename: "{app}\LICENSE"; Comment: "View SpeakAndSpeak License"
+Name: "{group}\License"; Filename: "{app}\LICENSE"; Comment: "View SpeakAndSpeak License"
 
 ; Desktop shortcut
 Name: "{autodesktop}\SpeakAndSpeak"; Filename: "{app}\app.exe"; IconFilename: "{app}\welcome.ico"; Tasks: desktopicon
