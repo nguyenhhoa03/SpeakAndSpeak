@@ -28,6 +28,7 @@ md dist 2>nul & copy /Y about.png dist\ & copy /Y app-config.yaml dist\ & copy /
 
 ### Tạo trình cài đặt
 
+- Copy LICENSE vào dist
 - Mở file `dist\SpeakAndSpeak.iss` với **Inno Setup**
 - Chọn Build --> Compile
 
