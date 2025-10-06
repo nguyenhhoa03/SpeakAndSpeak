@@ -30,8 +30,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Main executable
+; Main executables
 Source: "SpeakAndSpeak.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "discrimination.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; Images for application UI
 Source: "welcome.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "about.png"; DestDir: "{app}"; Flags: ignoreversion
