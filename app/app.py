@@ -454,24 +454,38 @@ class SpeakAndSpeakApp:
         github_link.pack(pady=20)
         github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/nguyenhhoa03/SpeakAndSpeak"))
     
-    def start_discrimination_exercise(self):
-        """Launch the discrimination.py script"""
+def start_discrimination_exercise(self):
+        """Launch the discrimination.exe (priority) or discrimination.py script"""
         try:
             self.exercise_status.configure(text="Starting exercise...")
             
-            # Check if discrimination.py exists
-            if not os.path.exists("discrimination.py"):
-                messagebox.showerror("Error", "discrimination.py file not found!")
+            # Check if discrimination.exe exists first (priority)
+            exe_path = "discrimination.exe"
+            py_path = "discrimination.py"
+            
+            if os.path.exists(exe_path):
+                # Run discrimination.exe in a separate process
+                if platform.system() == "Windows":
+                    subprocess.Popen([exe_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                else:
+                    subprocess.Popen([exe_path])
+                
+                self.exercise_status.configure(text="Exercise started successfully! (EXE)")
+            
+            elif os.path.exists(py_path):
+                # Fallback: Run discrimination.py in a separate process
+                if platform.system() == "Windows":
+                    subprocess.Popen([sys.executable, py_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                else:
+                    subprocess.Popen([sys.executable, py_path])
+                
+                self.exercise_status.configure(text="Exercise started successfully! (Python)")
+            
+            else:
+                # Neither file exists
+                messagebox.showerror("Error", "Neither discrimination.exe nor discrimination.py found!")
                 self.exercise_status.configure(text="Error: File not found")
                 return
-            
-            # Run discrimination.py in a separate process
-            if platform.system() == "Windows":
-                subprocess.Popen([sys.executable, "discrimination.py"], creationflags=subprocess.CREATE_NEW_CONSOLE)
-            else:
-                subprocess.Popen([sys.executable, "discrimination.py"])
-            
-            self.exercise_status.configure(text="Exercise started successfully!")
             
             # Clear status after 3 seconds
             self.root.after(3000, lambda: self.exercise_status.configure(text=""))
