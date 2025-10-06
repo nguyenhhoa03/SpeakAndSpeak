@@ -14,8 +14,8 @@ PrivilegesRequired=lowest
 OutputDir=Output
 OutputBaseFilename=SpeakAndSpeak-Setup
 SetupIconFile=welcome.ico
-Compression=lzma
-SolidCompression=yes
+Compression=lzma2
+SolidCompression=no
 ; License
 LicenseFile=LICENSE
 ; Uninstall Configuration
