@@ -5,9 +5,7 @@ import csv
 from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 import pronouncing
-import pyttsx3
 from wonderwords import RandomWord
-import threading
 import re
 from collections import defaultdict
 import os
@@ -18,9 +16,6 @@ class PhoneticDiscriminationApp:
         self.root = ctk.CTk()
         self.root.title("Phonetic Discrimination Exercise")
         self.root.geometry("800x650")
-        
-        # Initialize text-to-speech
-        self.tts = pyttsx3.init()
         
         # Initialize word generator
         self.word_generator = RandomWord()
@@ -57,11 +52,9 @@ class PhoneticDiscriminationApp:
                 config = yaml.safe_load(f)
                 self.color_scheme = config.get('color_scheme', {}).get('current', 'blue')
                 self.theme = config.get('theme', {}).get('current', 'dark')
-                self.speech_rate = config.get('speech_rate', {}).get('words_per_minute', 150)
         except FileNotFoundError:
             self.color_scheme = 'blue'
             self.theme = 'dark'
-            self.speech_rate = 150
             
     def load_data(self):
         """Load ARPAbet-IPA mapping and confusion groups"""
@@ -793,9 +786,6 @@ class PhoneticDiscriminationApp:
             exp_label = ctk.CTkLabel(self.result_frame, text=explanation,
                                    font=ctk.CTkFont(size=12))
             exp_label.pack(pady=5)
-            
-        # Pronunciation buttons
-        self.create_pronunciation_buttons()
         
     def get_explanation(self):
         """Get explanation for the question"""
@@ -816,38 +806,6 @@ class PhoneticDiscriminationApp:
         else:
             target_pos = self.current_question.get('target_stress_position', 0)
             return f"Three words have primary stress on syllable {target_pos + 1}, while one is different."
-            
-    def create_pronunciation_buttons(self):
-        """Create buttons to hear pronunciation of each word"""
-        if not self.current_question:
-            return
-            
-        button_frame = ctk.CTkFrame(self.result_frame)
-        button_frame.pack(pady=10, fill="x")
-        
-        play_label = ctk.CTkLabel(button_frame, text="Listen to pronunciations:")
-        play_label.pack(pady=5)
-        
-        for i, option_data in enumerate(self.current_question['options']):
-            word = option_data[0]
-            btn = ctk.CTkButton(button_frame, text=f"Play {chr(65+i)}: {word}",
-                              command=lambda w=word: self.play_pronunciation(w),
-                              width=150, height=30)
-            btn.pack(side="left", padx=5, pady=5)
-            
-    def play_pronunciation(self, word):
-        """Play pronunciation of a word using text-to-speech"""
-        def speak():
-            try:
-                self.tts.setProperty('rate', self.speech_rate)
-                self.tts.say(word)
-                self.tts.runAndWait()
-            except Exception as e:
-                print(f"TTS Error: {e}")
-                
-        # Run TTS in a separate thread to avoid blocking UI
-        thread = threading.Thread(target=speak, daemon=True)
-        thread.start()
         
     def run(self):
         """Run the application"""
