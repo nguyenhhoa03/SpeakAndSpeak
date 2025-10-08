@@ -37,7 +37,7 @@ Source: "discrimination.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "welcome.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "about.png"; DestDir: "{app}"; Flags: ignoreversion
 ; Data files
-Source: "eng_sentences.tsv"; DestDir: "{app}"; Flags: ignoreversion
+Source: "eng_sentences.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "arpabet_ipa_database.csv"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ipa_confusion_groups.yaml"; DestDir: "{app}"; Flags: ignoreversion
 ; Configuration files
