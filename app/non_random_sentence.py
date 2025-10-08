@@ -1,12 +1,6 @@
-def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv", lv=0):
-    """Generate random sentences from TSV file or SQLite DB and convert words to IPA.
-    Skip sentences containing numbers."""
-antml:parameter>
-<parameter name="old_str">def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
-    """Generate random sentences from TSV file or SQLite DB and convert words to IPA.
-    Skip sentences containing numbers."""#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
-non-random-sentence.py
+sentence-generator.py
 
 A script that generates sentences based on user performance analysis.
 Can be run standalone or imported into other scripts.
@@ -94,7 +88,6 @@ def _is_sqlite_db(file_path):
 
 def get_file_line_count(file_path):
     """Get total number of lines/rows in file efficiently."""
-    # Check if SQLite DB exists
     db_path = _get_db_path(file_path)
     if _is_sqlite_db(file_path):
         try:
@@ -108,12 +101,11 @@ def get_file_line_count(file_path):
             print(f"Error getting DB count: {e}")
             return 1991044
     
-    # Fallback to TSV counting
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             return sum(1 for line in f)
     except:
-        return 1991044  # Default known count
+        return 1991044
 
 
 def has_numbers(sentence):
@@ -136,26 +128,22 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
     """
     db_path = _get_db_path(file_path)
     
-    # Define length ranges based on difficulty level
     length_ranges = {
-        0: (0, 999999),      # No limit (auto)
-        1: (10, 40),         # Easy: short sentences
-        2: (40, 60),        # Medium: medium sentences
-        3: (60, 500)        # Hard: long sentences
+        0: (0, 999999),
+        1: (10, 40),
+        2: (40, 60),
+        3: (60, 500)
     }
     
     min_len, max_len = length_ranges.get(lv, (0, 999999))
     
-    # Try SQLite first
     if _is_sqlite_db(file_path):
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             
             for attempt in range(max_attempts):
-                # Get random sentence from database with length filter
                 if lv == 0:
-                    # No length filter
                     cursor.execute("""
                         SELECT sentence FROM sentences 
                         WHERE lang='eng' 
@@ -163,7 +151,6 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
                         LIMIT 1
                     """)
                 else:
-                    # Apply length filter
                     cursor.execute("""
                         SELECT sentence FROM sentences 
                         WHERE lang='eng' 
@@ -178,13 +165,10 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
                 if result and result[0]:
                     sentence = result[0].strip()
                     if not has_numbers(sentence):
-                        # For level 3 (hard), try to split long sentences by comma
                         if lv == 3 and ',' in sentence:
                             parts = [p.strip() for p in sentence.split(',', 1)]
-                            # Choose a random part if both are substantial
                             if len(parts) == 2 and len(parts[0]) > 20 and len(parts[1]) > 20:
                                 sentence = random.choice(parts)
-                                # Ensure it ends with proper punctuation
                                 if not sentence[-1] in '.!?':
                                     sentence += '.'
                         
@@ -192,20 +176,16 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
                         return sentence
             
             conn.close()
-            print(f"Warning: Could not find sentence without numbers after {max_attempts} attempts")
             return "This is a fallback sentence without any numbers."
             
         except Exception as e:
             print(f"Error reading from SQLite DB {db_path}: {e}")
-            # Fall through to TSV fallback
     
-    # Fallback to TSV if SQLite doesn't exist or fails
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentence.")
         return "This is a fallback sentence for testing purposes."
     
     try:
-        # Get total line count (cache this if called frequently)
         if not hasattr(get_random_sentence_from_file, 'line_count'):
             print("Counting lines in TSV file...")
             get_random_sentence_from_file.line_count = get_file_line_count(file_path)
@@ -213,48 +193,34 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
         
         total_lines = get_random_sentence_from_file.line_count
         
-        # Try multiple times to find a sentence without numbers
         for attempt in range(max_attempts):
-            # Generate random line number
             random_line = random.randint(1, total_lines)
             
-            # Read the specific line
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 for i, line in enumerate(f, 1):
                     if i == random_line:
                         try:
-                            # Parse TSV line and get column C (index 2)
                             columns = line.strip().split('\t')
                             if len(columns) >= 3 and columns[2].strip():
                                 sentence = columns[2].strip()
                                 sentence_len = len(sentence)
                                 
-                                # Check length filter
                                 if lv != 0 and (sentence_len < min_len or sentence_len > max_len):
-                                    break  # Skip this line
+                                    break
                                 
-                                # Check if sentence contains numbers
                                 if not has_numbers(sentence):
-                                    # For level 3 (hard), try to split long sentences by comma
                                     if lv == 3 and ',' in sentence:
                                         parts = [p.strip() for p in sentence.split(',', 1)]
-                                        # Choose a random part if both are substantial
                                         if len(parts) == 2 and len(parts[0]) > 20 and len(parts[1]) > 20:
                                             sentence = random.choice(parts)
-                                            # Ensure it ends with proper punctuation
                                             if not sentence[-1] in '.!?':
                                                 sentence += '.'
                                     
                                     return sentence
-                                # If sentence has numbers, break and try another random line
                                 break
                         except:
-                            # If parsing fails, try another random line
                             break
         
-        # If we couldn't find a sentence without numbers after max_attempts,
-        # return a fallback sentence
-        print(f"Warning: Could not find sentence without numbers after {max_attempts} attempts")
         return "This is a fallback sentence without any numbers."
         
     except Exception as e:
@@ -266,29 +232,18 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
     """
     Get multiple random sentences from TSV file or SQLite DB efficiently.
     Skip sentences containing numbers.
-    
-    Args:
-        file_path: Path to the TSV file (will auto-convert to .db if exists)
-        count: Number of sentences to retrieve
-        max_attempts: Maximum attempts to find sentences without numbers
-        lv: Difficulty level (0=auto, 1=easy/short, 2=medium, 3=hard/long)
-    
-    Returns:
-        list: List of random sentences without numbers
     """
     db_path = _get_db_path(file_path)
     
-    # Define length ranges based on difficulty level
     length_ranges = {
-        0: (10, 200),        # Auto: reasonable range
-        1: (10, 60),         # Easy: short sentences
-        2: (60, 120),        # Medium: medium sentences
-        3: (120, 250)        # Hard: long sentences
+        0: (10, 200),
+        1: (10, 60),
+        2: (60, 120),
+        3: (120, 250)
     }
     
     min_len, max_len = length_ranges.get(lv, (10, 200))
     
-    # Try SQLite first
     if _is_sqlite_db(file_path):
         try:
             conn = sqlite3.connect(db_path)
@@ -296,8 +251,6 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
             
             sentences = []
             attempts = 0
-            
-            # Get more sentences than needed to account for filtering
             fetch_count = min(count * 3, 200)
             
             while len(sentences) < count and attempts < max_attempts:
@@ -317,30 +270,24 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
                         break
                     
                     sentence = result[0].strip()
-                    # Basic validation and number check
                     if (len(sentence) >= min_len and len(sentence) <= max_len and 
                         not has_numbers(sentence) and sentence not in sentences):
                         
-                        # For level 3 (hard), try to split long sentences by comma
                         if lv == 3 and ',' in sentence:
                             parts = [p.strip() for p in sentence.split(',', 1)]
-                            # Choose a random part if both are substantial
                             if len(parts) == 2 and len(parts[0]) > 20 and len(parts[1]) > 20:
                                 sentence = random.choice(parts)
-                                # Ensure it ends with proper punctuation
                                 if not sentence[-1] in '.!?':
                                     sentence += '.'
                         
                         sentences.append(sentence)
                 
                 attempts += 1
-                
-                if len(results) == 0:  # No more results
+                if len(results) == 0:
                     break
             
             conn.close()
             
-            # If we didn't get enough sentences, pad with fallback
             while len(sentences) < count:
                 sentences.append(f"This is fallback sentence {len(sentences) + 1} without numbers.")
             
@@ -348,23 +295,18 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
             
         except Exception as e:
             print(f"Error reading multiple sentences from SQLite DB {db_path}: {e}")
-            # Fall through to TSV fallback
     
-    # Fallback to TSV if SQLite doesn't exist or fails
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentences.")
         return [f"This is fallback sentence number {i+1} without numbers." for i in range(count)]
     
     try:
-        # Get total line count
         if not hasattr(get_multiple_random_sentences, 'line_count'):
             print("Counting lines in TSV file...")
             get_multiple_random_sentences.line_count = get_file_line_count(file_path)
             print(f"File has {get_multiple_random_sentences.line_count} lines")
         
         total_lines = get_multiple_random_sentences.line_count
-        
-        # Generate more random line numbers than needed to account for skipped sentences
         random_lines = sorted(random.sample(range(1, total_lines + 1), min(count * 5, total_lines)))
         
         sentences = []
@@ -379,11 +321,9 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
                         break
                         
                     try:
-                        # Parse TSV line and get column C (index 2)
                         columns = line.strip().split('\t')
                         if len(columns) >= 3 and columns[2].strip():
                             sentence = columns[2].strip()
-                            # Basic sentence validation and number check
                             if (len(sentence) > 10 and len(sentence) < 200 and 
                                 not has_numbers(sentence)):
                                 sentences.append(sentence)
@@ -393,7 +333,6 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
                         pass
                     current_target += 1
         
-        # If we didn't get enough sentences, fill with additional random picks
         additional_attempts = 0
         while len(sentences) < count and additional_attempts < max_attempts:
             try:
@@ -405,7 +344,6 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
             except:
                 break
         
-        # If still not enough sentences, pad with fallback sentences
         while len(sentences) < count:
             sentences.append(f"This is fallback sentence {len(sentences) + 1} without numbers.")
         
@@ -416,38 +354,33 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
         return [f"Fallback sentence {i+1} due to file reading error." for i in range(count)]
 
 
-def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
+def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv", lv=0):
     """Generate random sentences from TSV file or SQLite DB and convert words to IPA.
     Skip sentences containing numbers."""
     sentences_with_ipa = []
     
-    # Get random sentences from file (already filtered for numbers)
     sentences = get_multiple_random_sentences(file_path, count, lv=lv)
     print(f"Retrieved {len(sentences)} sentences from file (no numbers, level {lv})")
     
     for sentence in sentences:
         try:
-            # Convert sentence to word-IPA pairs
             words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()
             word_ipa_pairs = []
             
             for word in words:
                 try:
-                    # Clean word from punctuation
                     clean_word = word.strip('.,!?;:"()[]{}')
                     if clean_word:
                         ipa = ipa_list(clean_word.lower())
                         if ipa:
                             word_ipa_pairs.append((clean_word, ipa[0]))
                 except:
-                    # Skip words that cause IPA conversion errors
                     continue
             
-            if word_ipa_pairs:  # Only add sentences with successful IPA conversions
+            if word_ipa_pairs:
                 sentences_with_ipa.append((sentence, word_ipa_pairs))
                 
         except Exception as e:
-            # Skip sentences that cause errors
             continue
     
     return sentences_with_ipa
@@ -456,13 +389,6 @@ def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
 def count_ipa_sounds_in_sentence(word_ipa_pairs, target_ipa_sounds):
     """
     Count how many target IPA sounds appear in a sentence.
-    
-    Args:
-        word_ipa_pairs: List of (word, ipa) tuples for the sentence
-        target_ipa_sounds: Counter object with target IPA sounds
-    
-    Returns:
-        Counter: IPA sounds found in this sentence
     """
     found_sounds = Counter()
     
@@ -477,13 +403,6 @@ def count_ipa_sounds_in_sentence(word_ipa_pairs, target_ipa_sounds):
 def score_sentence(word_ipa_pairs, target_ipa_frequencies):
     """
     Score a sentence based on how well it matches target IPA sound frequencies.
-    
-    Args:
-        word_ipa_pairs: List of (word, ipa) tuples for the sentence
-        target_ipa_frequencies: Counter with target IPA sound frequencies
-    
-    Returns:
-        float: Score (higher is better match)
     """
     if not target_ipa_frequencies:
         return 0
@@ -493,9 +412,8 @@ def score_sentence(word_ipa_pairs, target_ipa_frequencies):
     score = 0
     for sound, target_freq in target_ipa_frequencies.items():
         found_freq = found_sounds.get(sound, 0)
-        # Give points for each matching sound, with bonus for matching frequency
         if found_freq > 0:
-            score += min(found_freq, target_freq)  # Don't over-reward excess sounds
+            score += min(found_freq, target_freq)
     
     return score
 
@@ -503,14 +421,6 @@ def score_sentence(word_ipa_pairs, target_ipa_frequencies):
 def select_best_sentences(sentences_with_ipa, target_ipa_frequencies, top_n=10):
     """
     Select the best sentences based on IPA sound matching.
-    
-    Args:
-        sentences_with_ipa: List of (sentence, word_ipa_pairs) tuples
-        target_ipa_frequencies: Counter with target IPA sound frequencies
-        top_n: Number of top sentences to return
-    
-    Returns:
-        list: Top sentences with their scores
     """
     if not target_ipa_frequencies:
         return sentences_with_ipa
@@ -521,7 +431,6 @@ def select_best_sentences(sentences_with_ipa, target_ipa_frequencies, top_n=10):
         score = score_sentence(word_ipa_pairs, target_ipa_frequencies)
         scored_sentences.append((sentence, score, word_ipa_pairs))
     
-    # Sort by score (descending) and take top_n
     scored_sentences.sort(key=lambda x: x[1], reverse=True)
     return scored_sentences[:top_n]
 
@@ -538,53 +447,38 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
     Returns:
         str: Generated sentence without numbers
     """
-    # Load user data
     data = load_user_data(file_path)
-    
-    # Analyze last 20 nodes
     wrong_ipa_counter, error_rate = analyze_last_20_nodes(data)
     
     print(f"Error rate: {error_rate:.1f}%")
     print(f"Wrong IPA sounds: {dict(wrong_ipa_counter)}")
     print(f"Difficulty level: {lv} ({'auto' if lv == 0 else ['easy', 'medium', 'hard'][lv-1]})")
     
-    # Determine if we should use non-random approach
-    # Error rate becomes the probability of non-random sentence generation
     use_non_random = random.random() * 100 < error_rate
     
     if not use_non_random or not wrong_ipa_counter:
-        # Generate truly random sentence (without numbers)
         print("Generating truly random sentence...")
         return get_random_sentence_from_file(tsv_file_path, lv=lv)
     
     else:
-        # Generate non-random sentence based on wrong IPA sounds
         print("Generating non-random sentence based on error patterns...")
         
-        # Generate 30 random sentences with IPA (already filtered for numbers)
         sentences_with_ipa = generate_random_sentences_with_ipa(30, tsv_file_path, lv=lv)
         print(f"Generated {len(sentences_with_ipa)} sentences with IPA (no numbers, level {lv})")
         
         if not sentences_with_ipa:
-            # Fallback to random sentence if IPA conversion fails
             return get_random_sentence_from_file(tsv_file_path, lv=lv)
         
-        # Select best sentences based on IPA sound matching
         best_sentences = select_best_sentences(sentences_with_ipa, wrong_ipa_counter)
         
         if best_sentences:
-            # Show scoring information
             print("Top scored sentences:")
             for i, (sentence, score, _) in enumerate(best_sentences[:3]):
                 print(f"{i+1}. Score: {score} - {sentence}")
             
-            # Randomly select from top sentences (weighted by score)
             if len(best_sentences) > 1:
-                # Use weighted random selection favoring higher scores
                 sentences = [item[0] for item in best_sentences]
                 scores = [item[1] for item in best_sentences]
-                
-                # Add 1 to all scores to avoid zero weights
                 weights = [score + 1 for score in scores]
                 selected_sentence = random.choices(sentences, weights=weights, k=1)[0]
             else:
@@ -592,26 +486,23 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
             
             return selected_sentence
         else:
-            # Fallback: select random sentence from generated ones
             print("No sentences with matching IPA sounds, selecting randomly...")
             return random.choice([sentence for sentence, _ in sentences_with_ipa])
 
 
 def main():
     """Main function for standalone execution."""
-    print("=== Non-Random Sentence Generator (No Numbers) ===")
+    print("=== Sentence Generator with IPA (No Numbers) ===")
     
     try:
         sentence = generate_sentence()
         print(f"\nGenerated sentence: {sentence}")
         
-        # Verify no numbers in the sentence
         if has_numbers(sentence):
             print("WARNING: Generated sentence contains numbers!")
         else:
             print("✓ Sentence contains no numbers")
         
-        # Show IPA for words in the sentence (first few words)
         words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()[:5]
         print("\nIPA for first few words:")
         for word in words:
