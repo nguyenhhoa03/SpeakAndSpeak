@@ -45,6 +45,7 @@ class SpeakAndSpeakApp:
         self.current_sentence = ""
         self.is_recording = False
         self.progress_timer = None
+        self.current_difficulty = self.config.get("sentence_difficulty", {}).get("current", "Easy")
         
         self.create_widgets()
         
@@ -55,6 +56,10 @@ class SpeakAndSpeakApp:
             
             ctk.set_appearance_mode(self.config["theme"]["current"])
             ctk.set_default_color_theme(self.config["color_scheme"]["current"])
+            
+            # Load sentence difficulty setting if exists
+            if "sentence_difficulty" in self.config:
+                self.current_difficulty = self.config["sentence_difficulty"]["current"]
             
         except FileNotFoundError:
             self.config = {
@@ -80,6 +85,14 @@ class SpeakAndSpeakApp:
                 "words_per_minute": 150,
                 "min_rate": 60,
                 "max_rate": 300
+            }
+            self.save_config()
+        
+        # Ensure sentence_difficulty exists in config
+        if "sentence_difficulty" not in self.config:
+            self.config["sentence_difficulty"] = {
+                "levels": ["Auto", "Easy", "Medium", "Hard"],
+                "current": "Easy"
             }
             self.save_config()
     
@@ -249,6 +262,27 @@ class SpeakAndSpeakApp:
     def setup_sentence_tab(self):
         main_frame = ctk.CTkFrame(self.sentence_tab)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Difficulty selection frame
+        difficulty_frame = ctk.CTkFrame(main_frame)
+        difficulty_frame.pack(fill="x", padx=20, pady=10)
+        
+        difficulty_label = ctk.CTkLabel(
+            difficulty_frame,
+            text="Difficulty Level:",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        difficulty_label.pack(side="left", padx=10)
+        
+        self.difficulty_var = ctk.StringVar(value=self.current_difficulty)
+        difficulty_menu = ctk.CTkOptionMenu(
+            difficulty_frame,
+            variable=self.difficulty_var,
+            values=self.config["sentence_difficulty"]["levels"],
+            command=self.change_difficulty_level,
+            width=120
+        )
+        difficulty_menu.pack(side="left", padx=10)
         
         self.sentence_label = ctk.CTkLabel(
             main_frame,
@@ -521,6 +555,12 @@ class SpeakAndSpeakApp:
         progress_bar.set(1.0)
         threading.Timer(0.5, lambda: progress_bar.set(0)).start()
     
+    def change_difficulty_level(self, level):
+        """Thay đổi và lưu độ khó câu"""
+        self.current_difficulty = level
+        self.config["sentence_difficulty"]["current"] = level
+        self.save_config()
+    
     def generate_random_sentence(self):
         try:
             self.sentence_status.configure(text="Generating sentence...")
@@ -528,7 +568,11 @@ class SpeakAndSpeakApp:
             
             def generate_sentence_thread():
                 try:
-                    sentence = generate_sentence("user-data.yaml")
+                    # Convert difficulty level to lv parameter (Auto=0, Easy=1, Medium=2, Hard=3)
+                    difficulty_map = {"Auto": 0, "Easy": 1, "Medium": 2, "Hard": 3}
+                    lv = difficulty_map.get(self.current_difficulty, 1)
+                    
+                    sentence = generate_sentence("user-data.yaml", "eng_sentences.tsv", lv)
                     self.root.after(0, lambda: self._update_sentence_generated(sentence))
                 except Exception as e:
                     self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate sentence: {str(e)}"))
