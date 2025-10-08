@@ -17,6 +17,7 @@ import random
 import csv
 import os
 import re
+import sqlite3
 from collections import Counter
 from eng_to_ipa import ipa_list
 
@@ -62,8 +63,46 @@ def analyze_last_20_nodes(data):
     return Counter(wrong_ipa_sounds), error_rate
 
 
+def _get_db_path(file_path):
+    """Convert TSV file path to SQLite DB path."""
+    if file_path.endswith('.tsv'):
+        return file_path.replace('.tsv', '.db')
+    return file_path
+
+
+def _is_sqlite_db(file_path):
+    """Check if file is SQLite database."""
+    db_path = _get_db_path(file_path)
+    if not os.path.exists(db_path):
+        return False
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sentences'")
+        result = cursor.fetchone()
+        conn.close()
+        return result is not None
+    except:
+        return False
+
+
 def get_file_line_count(file_path):
-    """Get total number of lines in file efficiently."""
+    """Get total number of lines/rows in file efficiently."""
+    # Check if SQLite DB exists
+    db_path = _get_db_path(file_path)
+    if _is_sqlite_db(file_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM sentences WHERE lang='eng'")
+            count = cursor.fetchone()[0]
+            conn.close()
+            return count
+        except Exception as e:
+            print(f"Error getting DB count: {e}")
+            return 1991044
+    
+    # Fallback to TSV counting
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             return sum(1 for line in f)
@@ -78,16 +117,49 @@ def has_numbers(sentence):
 
 def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10):
     """
-    Get a random sentence from TSV file efficiently without loading entire file.
+    Get a random sentence from TSV file or SQLite DB efficiently.
     Skip sentences containing numbers.
     
     Args:
-        file_path: Path to the TSV file
+        file_path: Path to the TSV file (will auto-convert to .db if exists)
         max_attempts: Maximum attempts to find a sentence without numbers
     
     Returns:
         str: Random sentence from column C (3rd column) without numbers
     """
+    db_path = _get_db_path(file_path)
+    
+    # Try SQLite first
+    if _is_sqlite_db(file_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            for attempt in range(max_attempts):
+                # Get random sentence from database
+                cursor.execute("""
+                    SELECT sentence FROM sentences 
+                    WHERE lang='eng' 
+                    ORDER BY RANDOM() 
+                    LIMIT 1
+                """)
+                result = cursor.fetchone()
+                
+                if result and result[0]:
+                    sentence = result[0].strip()
+                    if not has_numbers(sentence):
+                        conn.close()
+                        return sentence
+            
+            conn.close()
+            print(f"Warning: Could not find sentence without numbers after {max_attempts} attempts")
+            return "This is a fallback sentence without any numbers."
+            
+        except Exception as e:
+            print(f"Error reading from SQLite DB {db_path}: {e}")
+            # Fall through to TSV fallback
+    
+    # Fallback to TSV if SQLite doesn't exist or fails
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentence.")
         return "This is a fallback sentence for testing purposes."
@@ -136,17 +208,71 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
 
 def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_attempts=100):
     """
-    Get multiple random sentences from TSV file efficiently.
+    Get multiple random sentences from TSV file or SQLite DB efficiently.
     Skip sentences containing numbers.
     
     Args:
-        file_path: Path to the TSV file
+        file_path: Path to the TSV file (will auto-convert to .db if exists)
         count: Number of sentences to retrieve
         max_attempts: Maximum attempts to find sentences without numbers
     
     Returns:
         list: List of random sentences without numbers
     """
+    db_path = _get_db_path(file_path)
+    
+    # Try SQLite first
+    if _is_sqlite_db(file_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            sentences = []
+            attempts = 0
+            
+            # Get more sentences than needed to account for filtering
+            fetch_count = min(count * 3, 200)
+            
+            while len(sentences) < count and attempts < max_attempts:
+                cursor.execute("""
+                    SELECT sentence FROM sentences 
+                    WHERE lang='eng' 
+                    AND LENGTH(sentence) > 10 
+                    AND LENGTH(sentence) < 200
+                    ORDER BY RANDOM() 
+                    LIMIT ?
+                """, (fetch_count,))
+                
+                results = cursor.fetchall()
+                
+                for result in results:
+                    if len(sentences) >= count:
+                        break
+                    
+                    sentence = result[0].strip()
+                    # Basic validation and number check
+                    if (len(sentence) > 10 and len(sentence) < 200 and 
+                        not has_numbers(sentence) and sentence not in sentences):
+                        sentences.append(sentence)
+                
+                attempts += 1
+                
+                if len(results) == 0:  # No more results
+                    break
+            
+            conn.close()
+            
+            # If we didn't get enough sentences, pad with fallback
+            while len(sentences) < count:
+                sentences.append(f"This is fallback sentence {len(sentences) + 1} without numbers.")
+            
+            return sentences[:count]
+            
+        except Exception as e:
+            print(f"Error reading multiple sentences from SQLite DB {db_path}: {e}")
+            # Fall through to TSV fallback
+    
+    # Fallback to TSV if SQLite doesn't exist or fails
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found. Using fallback sentences.")
         return [f"This is fallback sentence number {i+1} without numbers." for i in range(count)]
@@ -213,7 +339,7 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
 
 
 def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv"):
-    """Generate random sentences from TSV file and convert words to IPA.
+    """Generate random sentences from TSV file or SQLite DB and convert words to IPA.
     Skip sentences containing numbers."""
     sentences_with_ipa = []
     
@@ -328,7 +454,7 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
     
     Args:
         file_path: Path to user data YAML file
-        tsv_file_path: Path to TSV sentences file
+        tsv_file_path: Path to TSV sentences file (will auto-convert to .db if exists)
     
     Returns:
         str: Generated sentence without numbers
