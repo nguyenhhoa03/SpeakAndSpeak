@@ -670,7 +670,7 @@ class PhoneticDiscriminationApp:
         question_type = self.current_question['type']
         
         if question_type == "phonetic":
-            instruction = "Choose the word with the DIFFERENT underlined sound:"
+            instruction = "Choose the word with the DIFFERENT marked sound:"
         else:
             instruction = "Choose the word with the DIFFERENT stress pattern:"
             
