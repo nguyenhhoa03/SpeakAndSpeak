@@ -24,20 +24,20 @@ SENTENCES_FILE = "eng_sentences.tsv"
 
 class Colors:
     """ANSI color codes for terminal output"""
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+    HEADER = ''
+    BLUE = ''
+    CYAN = ''
+    GREEN = ''
+    YELLOW = ''
+    RED = ''
+    END = ''
+    BOLD = ''
 
-def print_step(message, color=Colors.CYAN):
+def print_step(message, color=None):
     """Print colored step message"""
-    print(f"\n{color}{'='*60}{Colors.END}")
-    print(f"{color}{Colors.BOLD}🔨 {message}{Colors.END}")
-    print(f"{color}{'='*60}{Colors.END}\n")
+    print(f"\n{'='*60}")
+    print(f"🔨 {message}")
+    print(f"{'='*60}\n")
 
 def print_success(message):
     """Print success message"""
@@ -53,20 +53,18 @@ def print_warning(message):
 
 def select_language():
     """Ask user to select build language"""
-    print(f"\n{Colors.HEADER}{Colors.BOLD}")
-    print("╔══════════════════════════════════════════════════════╗")
-    print("║     SpeakAndSpeak Build - Language Selection         ║")
-    print("╚══════════════════════════════════════════════════════╝")
-    print(f"{Colors.END}\n")
+    print(f"\n{'='*60}")
+    print("     SpeakAndSpeak Build - Language Selection")
+    print(f"{'='*60}\n")
     
-    print(f"{Colors.CYAN}Please select the build language:{Colors.END}")
-    print(f"  {Colors.BOLD}1.{Colors.END} English (Default)")
-    print(f"  {Colors.BOLD}2.{Colors.END} Tiếng Việt (Vietnamese)")
+    print("Please select the build language:")
+    print("  1. English (Default)")
+    print("  2. Tiếng Việt (Vietnamese)")
     print()
     
     while True:
         try:
-            choice = input(f"{Colors.YELLOW}Enter your choice (1 or 2): {Colors.END}").strip()
+            choice = input("Enter your choice (1 or 2): ").strip()
             if choice == "1":
                 print_success("Selected: English (Default)")
                 return "en"
@@ -76,7 +74,7 @@ def select_language():
             else:
                 print_error("Invalid choice. Please enter 1 or 2.")
         except KeyboardInterrupt:
-            print(f"\n{Colors.YELLOW}Build cancelled by user{Colors.END}")
+            print("\nBuild cancelled by user")
             sys.exit(1)
 
 def check_python_version():
@@ -259,6 +257,8 @@ def prepare_dist():
         "app-config.yaml",
         "user-data.yaml",
         "welcome.png",
+        "welcome.ico",
+        "SpeakAndSpeak.iss",
         "arpabet_ipa_database.csv",
         "ipa_confusion_groups.yaml",
         "../LICENSE"  # Copy from parent directory
@@ -349,12 +349,10 @@ def build_executable(name, script, vosk_lib):
 
 def main():
     """Main build process"""
-    print(f"\n{Colors.HEADER}{Colors.BOLD}")
-    print("╔══════════════════════════════════════════════════════╗")
-    print("║     SpeakAndSpeak Auto Build Script                 ║")
-    print("║     Platform: {:<40}║".format(platform.system()))
-    print("╚══════════════════════════════════════════════════════╝")
-    print(f"{Colors.END}\n")
+    print(f"\n{'='*60}")
+    print("     SpeakAndSpeak Auto Build Script")
+    print("     Platform: {}".format(platform.system()))
+    print(f"{'='*60}\n")
     
     # Select language first
     lang = select_language()
@@ -407,12 +405,10 @@ def main():
     
     # Final message
     lang_name = "Vietnamese" if lang == "vi" else "English"
-    print(f"\n{Colors.GREEN}{Colors.BOLD}")
-    print("╔══════════════════════════════════════════════════════╗")
-    print("║          BUILD COMPLETED SUCCESSFULLY!               ║")
-    print("║          Language: {:<35}║".format(lang_name))
-    print("╚══════════════════════════════════════════════════════╝")
-    print(f"{Colors.END}")
+    print(f"\n{'='*60}")
+    print("          BUILD COMPLETED SUCCESSFULLY!")
+    print("          Language: {}".format(lang_name))
+    print(f"{'='*60}")
     print(f"\n📂 Output directory: {os.path.abspath('dist')}")
     print(f"🚀 Run: ./dist/SpeakAndSpeak{exe_ext}\n")
 
@@ -420,7 +416,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(f"\n\n{Colors.YELLOW}Build cancelled by user{Colors.END}")
+        print("\n\nBuild cancelled by user")
         sys.exit(1)
     except Exception as e:
         print_error(f"Unexpected error: {e}")
