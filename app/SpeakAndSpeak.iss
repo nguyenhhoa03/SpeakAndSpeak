@@ -3,7 +3,7 @@
 [Setup]
 ; Basic Information
 AppName=SpeakAndSpeak
-AppVersion=1.0.0
+AppVersion=1.1
 AppPublisher=SpeakAndSpeak Project
 AppPublisherURL=https://github.com/nguyenhhoa03/SpeakAndSpeak
 ; Installation Configuration
