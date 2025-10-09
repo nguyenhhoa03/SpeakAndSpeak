@@ -122,7 +122,7 @@ class SpeakAndSpeakApp:
         
         self.welcome_tab = self.tabview.add("Chào Mừng")
         self.exercise_tab = self.tabview.add("Bài Tập")
-        self.sentence_tab = self.tabview.add("Câu")
+        self.sentence_tab = self.tabview.add("Phát âm")
         self.statistics_tab = self.tabview.add("Thống Kê")
         self.settings_tab = self.tabview.add("Cài Đặt")
         self.about_tab = self.tabview.add("Giới Thiệu")
