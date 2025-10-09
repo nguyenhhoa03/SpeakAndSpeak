@@ -2,6 +2,7 @@
 """
 SpeakAndSpeak Auto Build Script
 Supports: Windows & Linux
+Languages: English (Default) & Vietnamese
 """
 
 import os
@@ -49,6 +50,34 @@ def print_error(message):
 def print_warning(message):
     """Print warning message"""
     print(f"{Colors.YELLOW}⚠️  {message}{Colors.END}")
+
+def select_language():
+    """Ask user to select build language"""
+    print(f"\n{Colors.HEADER}{Colors.BOLD}")
+    print("╔══════════════════════════════════════════════════════╗")
+    print("║     SpeakAndSpeak Build - Language Selection         ║")
+    print("╚══════════════════════════════════════════════════════╝")
+    print(f"{Colors.END}\n")
+    
+    print(f"{Colors.CYAN}Please select the build language:{Colors.END}")
+    print(f"  {Colors.BOLD}1.{Colors.END} English (Default)")
+    print(f"  {Colors.BOLD}2.{Colors.END} Tiếng Việt (Vietnamese)")
+    print()
+    
+    while True:
+        try:
+            choice = input(f"{Colors.YELLOW}Enter your choice (1 or 2): {Colors.END}").strip()
+            if choice == "1":
+                print_success("Selected: English (Default)")
+                return "en"
+            elif choice == "2":
+                print_success("Selected: Tiếng Việt (Vietnamese)")
+                return "vi"
+            else:
+                print_error("Invalid choice. Please enter 1 or 2.")
+        except KeyboardInterrupt:
+            print(f"\n{Colors.YELLOW}Build cancelled by user{Colors.END}")
+            sys.exit(1)
 
 def check_python_version():
     """Check if Python version is adequate"""
@@ -250,6 +279,28 @@ def prepare_dist():
     
     return True
 
+def check_source_files(lang):
+    """Check if source files exist for the selected language"""
+    print_step("Checking source files")
+    
+    suffix = ".vi.py" if lang == "vi" else ".py"
+    app_file = f"app{suffix}" if lang == "vi" else "app.py"
+    disc_file = f"discrimination{suffix}" if lang == "vi" else "discrimination.py"
+    
+    missing_files = []
+    if not os.path.exists(app_file):
+        missing_files.append(app_file)
+    if not os.path.exists(disc_file):
+        missing_files.append(disc_file)
+    
+    if missing_files:
+        print_error(f"Missing source files: {', '.join(missing_files)}")
+        return False, None, None
+    
+    print_success(f"Found: {app_file}")
+    print_success(f"Found: {disc_file}")
+    return True, app_file, disc_file
+
 def build_executable(name, script, vosk_lib):
     """Build executable with PyInstaller"""
     print_step(f"Building {name}")
@@ -299,16 +350,25 @@ def build_executable(name, script, vosk_lib):
 def main():
     """Main build process"""
     print(f"\n{Colors.HEADER}{Colors.BOLD}")
-    print("╔════════════════════════════════════════════════════════╗")
-    print("║     SpeakAndSpeak Auto Build Script                   ║")
-    print("║     Platform: {:<40} ║".format(platform.system()))
-    print("╚════════════════════════════════════════════════════════╝")
+    print("╔══════════════════════════════════════════════════════╗")
+    print("║     SpeakAndSpeak Auto Build Script                 ║")
+    print("║     Platform: {:<40}║".format(platform.system()))
+    print("╚══════════════════════════════════════════════════════╝")
     print(f"{Colors.END}\n")
+    
+    # Select language first
+    lang = select_language()
     
     # Change to app directory
     if os.path.exists("app"):
         os.chdir("app")
-        print(f"📁 Working directory: {os.getcwd()}\n")
+        print(f"📂 Working directory: {os.getcwd()}\n")
+    
+    # Check source files
+    files_ok, app_file, disc_file = check_source_files(lang)
+    if not files_ok:
+        print_error("Source file check failed")
+        sys.exit(1)
     
     # Build steps
     check_python_version()
@@ -329,11 +389,11 @@ def main():
     vosk_lib = get_vosk_lib_path()
     print(f"📚 Vosk library: {vosk_lib}\n")
     
-    # Build executables
-    if not build_executable("SpeakAndSpeak", "app.py", vosk_lib):
+    # Build executables with selected language files
+    if not build_executable("SpeakAndSpeak", app_file, vosk_lib):
         sys.exit(1)
     
-    if not build_executable("discrimination", "discrimination.py", vosk_lib):
+    if not build_executable("discrimination", disc_file, vosk_lib):
         sys.exit(1)
     
     # Move executables to dist
@@ -346,12 +406,14 @@ def main():
             print_success(f"Found: {exe}{exe_ext}")
     
     # Final message
+    lang_name = "Vietnamese" if lang == "vi" else "English"
     print(f"\n{Colors.GREEN}{Colors.BOLD}")
-    print("╔════════════════════════════════════════════════════════╗")
-    print("║              BUILD COMPLETED SUCCESSFULLY!            ║")
-    print("╚════════════════════════════════════════════════════════╝")
+    print("╔══════════════════════════════════════════════════════╗")
+    print("║          BUILD COMPLETED SUCCESSFULLY!               ║")
+    print("║          Language: {:<35}║".format(lang_name))
+    print("╚══════════════════════════════════════════════════════╝")
     print(f"{Colors.END}")
-    print(f"\n📁 Output directory: {os.path.abspath('dist')}")
+    print(f"\n📂 Output directory: {os.path.abspath('dist')}")
     print(f"🚀 Run: ./dist/SpeakAndSpeak{exe_ext}\n")
 
 if __name__ == "__main__":
