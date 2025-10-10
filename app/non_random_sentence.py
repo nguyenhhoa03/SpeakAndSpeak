@@ -113,6 +113,87 @@ def has_numbers(sentence):
     return bool(re.search(r'\d', sentence))
 
 
+def get_random_words_from_db(file_path="eng_sentences.tsv", count=100, max_attempts=10):
+    """
+    Extract random words from sentences in SQLite DB.
+    Filter out words starting with capital letters (proper nouns).
+    
+    Args:
+        file_path: Path to the TSV file (will auto-convert to .db if exists)
+        count: Number of words to retrieve
+        max_attempts: Maximum attempts to find valid words
+    
+    Returns:
+        list: List of lowercase words without capital initials or numbers
+    """
+    db_path = _get_db_path(file_path)
+    
+    if not _is_sqlite_db(file_path):
+        return ["fallback", "word", "test"]
+    
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        words = []
+        attempts = 0
+        fetch_count = count * 3
+        
+        while len(words) < count and attempts < max_attempts:
+            cursor.execute("""
+                SELECT sentence FROM sentences 
+                WHERE lang='eng' 
+                AND LENGTH(sentence) >= 10
+                AND LENGTH(sentence) <= 100
+                ORDER BY RANDOM() 
+                LIMIT ?
+            """, (fetch_count,))
+            
+            results = cursor.fetchall()
+            
+            for result in results:
+                if len(words) >= count:
+                    break
+                
+                sentence = result[0].strip()
+                if has_numbers(sentence):
+                    continue
+                
+                # Split sentence into words and filter
+                sentence_words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').replace(';', '').replace(':', '').split()
+                
+                for word in sentence_words:
+                    if len(words) >= count:
+                        break
+                    
+                    clean_word = word.strip('.,!?;:"()[]{}\'')
+                    
+                    # Skip words starting with capital letter (likely proper nouns)
+                    if clean_word and clean_word[0].isupper():
+                        continue
+                    
+                    # Skip words with numbers or too short
+                    if clean_word and len(clean_word) > 2 and not has_numbers(clean_word):
+                        if clean_word.lower() not in words:
+                            words.append(clean_word.lower())
+            
+            attempts += 1
+            if len(results) == 0:
+                break
+        
+        conn.close()
+        
+        # Fill with fallback if needed
+        while len(words) < count:
+            words.append(f"word{len(words) + 1}")
+        
+        return words[:count]
+        
+    except Exception as e:
+        print(f"Error reading words from SQLite DB {db_path}: {e}")
+        return ["fallback", "word", "test"]
+
+
 def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10, lv=0):
     """
     Get a random sentence from TSV file or SQLite DB efficiently.
@@ -121,16 +202,22 @@ def get_random_sentence_from_file(file_path="eng_sentences.tsv", max_attempts=10
     Args:
         file_path: Path to the TSV file (will auto-convert to .db if exists)
         max_attempts: Maximum attempts to find a sentence without numbers
-        lv: Difficulty level (0=auto, 1=easy/short, 2=medium, 3=hard/long)
+        lv: Difficulty level (0=auto, 1=easy/word, 2=medium, 3=hard/long)
     
     Returns:
-        str: Random sentence from column C (3rd column) without numbers
+        str: Random sentence from column C (3rd column) without numbers, or single word for lv=1
     """
+    # Special handling for lv=1: return single word instead of sentence
+    if lv == 1:
+        words = get_random_words_from_db(file_path, count=1, max_attempts=max_attempts)
+        if words:
+            return words[0].capitalize()
+        return "Word"
+    
     db_path = _get_db_path(file_path)
     
     length_ranges = {
         0: (0, 999999),
-        1: (10, 40),
         2: (40, 60),
         3: (60, 500)
     }
@@ -232,12 +319,17 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
     """
     Get multiple random sentences from TSV file or SQLite DB efficiently.
     Skip sentences containing numbers.
+    For lv=1, return individual words instead of sentences.
     """
+    # Special handling for lv=1: return words instead of sentences
+    if lv == 1:
+        words = get_random_words_from_db(file_path, count=count, max_attempts=max_attempts)
+        return [word.capitalize() for word in words]
+    
     db_path = _get_db_path(file_path)
     
     length_ranges = {
         0: (10, 200),
-        1: (10, 60),
         2: (60, 120),
         3: (120, 250)
     }
@@ -356,29 +448,41 @@ def get_multiple_random_sentences(file_path="eng_sentences.tsv", count=30, max_a
 
 def generate_random_sentences_with_ipa(count=30, file_path="eng_sentences.tsv", lv=0):
     """Generate random sentences from TSV file or SQLite DB and convert words to IPA.
-    Skip sentences containing numbers."""
+    Skip sentences containing numbers.
+    For lv=1, generate individual words with IPA."""
     sentences_with_ipa = []
     
     sentences = get_multiple_random_sentences(file_path, count, lv=lv)
-    print(f"Retrieved {len(sentences)} sentences from file (no numbers, level {lv})")
+    print(f"Retrieved {len(sentences)} {'words' if lv == 1 else 'sentences'} from file (no numbers, level {lv})")
     
     for sentence in sentences:
         try:
-            words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()
-            word_ipa_pairs = []
-            
-            for word in words:
-                try:
-                    clean_word = word.strip('.,!?;:"()[]{}')
-                    if clean_word:
+            # For lv=1, sentence is actually a single word
+            if lv == 1:
+                clean_word = sentence.strip('.,!?;:"()[]{}')
+                if clean_word:
+                    try:
                         ipa = ipa_list(clean_word.lower())
                         if ipa:
-                            word_ipa_pairs.append((clean_word, ipa[0]))
-                except:
-                    continue
-            
-            if word_ipa_pairs:
-                sentences_with_ipa.append((sentence, word_ipa_pairs))
+                            sentences_with_ipa.append((sentence, [(clean_word, ipa[0])]))
+                    except:
+                        continue
+            else:
+                words = sentence.replace('.', '').replace(',', '').replace('!', '').replace('?', '').split()
+                word_ipa_pairs = []
+                
+                for word in words:
+                    try:
+                        clean_word = word.strip('.,!?;:"()[]{}')
+                        if clean_word:
+                            ipa = ipa_list(clean_word.lower())
+                            if ipa:
+                                word_ipa_pairs.append((clean_word, ipa[0]))
+                    except:
+                        continue
+                
+                if word_ipa_pairs:
+                    sentences_with_ipa.append((sentence, word_ipa_pairs))
                 
         except Exception as e:
             continue
@@ -442,29 +546,31 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
     Args:
         file_path: Path to user data YAML file
         tsv_file_path: Path to TSV sentences file (will auto-convert to .db if exists)
-        lv: Difficulty level (0=auto, 1=easy/short, 2=medium, 3=hard/long)
+        lv: Difficulty level (0=auto, 1=easy/word, 2=medium, 3=hard/long)
     
     Returns:
-        str: Generated sentence without numbers
+        str: Generated sentence without numbers, or single capitalized word for lv=1
     """
     data = load_user_data(file_path)
     wrong_ipa_counter, error_rate = analyze_last_20_nodes(data)
     
     print(f"Error rate: {error_rate:.1f}%")
     print(f"Wrong IPA sounds: {dict(wrong_ipa_counter)}")
-    print(f"Difficulty level: {lv} ({'auto' if lv == 0 else ['easy', 'medium', 'hard'][lv-1]})")
+    
+    level_names = {0: 'auto', 1: 'word', 2: 'medium', 3: 'hard'}
+    print(f"Difficulty level: {lv} ({level_names.get(lv, 'unknown')})")
     
     use_non_random = random.random() * 100 < error_rate
     
     if not use_non_random or not wrong_ipa_counter:
-        print("Generating truly random sentence...")
+        print(f"Generating truly random {'word' if lv == 1 else 'sentence'}...")
         return get_random_sentence_from_file(tsv_file_path, lv=lv)
     
     else:
-        print("Generating non-random sentence based on error patterns...")
+        print(f"Generating non-random {'word' if lv == 1 else 'sentence'} based on error patterns...")
         
         sentences_with_ipa = generate_random_sentences_with_ipa(30, tsv_file_path, lv=lv)
-        print(f"Generated {len(sentences_with_ipa)} sentences with IPA (no numbers, level {lv})")
+        print(f"Generated {len(sentences_with_ipa)} {'words' if lv == 1 else 'sentences'} with IPA (no numbers, level {lv})")
         
         if not sentences_with_ipa:
             return get_random_sentence_from_file(tsv_file_path, lv=lv)
@@ -472,7 +578,7 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
         best_sentences = select_best_sentences(sentences_with_ipa, wrong_ipa_counter)
         
         if best_sentences:
-            print("Top scored sentences:")
+            print("Top scored items:")
             for i, (sentence, score, _) in enumerate(best_sentences[:3]):
                 print(f"{i+1}. Score: {score} - {sentence}")
             
@@ -486,7 +592,7 @@ def generate_sentence(file_path="user-data.yaml", tsv_file_path="eng_sentences.t
             
             return selected_sentence
         else:
-            print("No sentences with matching IPA sounds, selecting randomly...")
+            print("No items with matching IPA sounds, selecting randomly...")
             return random.choice([sentence for sentence, _ in sentences_with_ipa])
 
 
