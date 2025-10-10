@@ -22,6 +22,7 @@ Một ứng dụng đơn giản được thiết kế để giúp bạn cải th
     ```
 
 Hoặc mở ứng dụng đã cài đặt.
+
 2.  **Chọn tab:**
     *   **Word:** Luyện phát âm từng từ. Nhấn "Random Word" để tạo từ mới, "Listen" để nghe phát âm chuẩn, và "Record" để ghi âm giọng của bạn.
     *   **Sentence:** Luyện phát âm cả câu. Tương tự như tab "Word".
