@@ -286,7 +286,7 @@ class SpeakAndSpeakApp:
         
         self.sentence_label = ctk.CTkLabel(
             main_frame,
-            text="Click 'Random Sentence' to start!",
+            text="Click 'Random exercise' to start!",
             font=ctk.CTkFont(size=20, weight="bold"),
             wraplength=700
         )
@@ -297,7 +297,7 @@ class SpeakAndSpeakApp:
         
         random_sentence_btn = ctk.CTkButton(
             control_frame,
-            text="Random Sentence",
+            text="Random exercise",
             command=self.generate_random_sentence,
             width=140,
             height=35
