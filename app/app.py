@@ -495,7 +495,7 @@ class SpeakAndSpeakApp:
                 
                 # Check if discrimination.exe exists first (priority)
                 exe_path = "discrimination.exe"
-                py_path = "discrimination.py"
+                py_path = "discrimination"
                 
                 if os.path.exists(exe_path):
                     # Run discrimination.exe in a separate process
