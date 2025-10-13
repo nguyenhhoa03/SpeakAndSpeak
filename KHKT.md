@@ -1,10 +1,3 @@
-<div align="center">
-<font size="4"><b>SỞ GIÁO DỤC VÀ ĐÀO TẠO TỈNH VĨNH LONG</b></font><br>
-<font size="4"><b>TRƯỜNG THPT CHUYÊN BẾN TRE</b></font><br>
-<font size="5"><b>CUỘC THI KHOA HỌC KỸ THUẬT 2025 – 2026</b></font>
-</div>
-<br>
-
 # ỨNG DỤNG HỖ TRỢ LUYỆN PHÁT ÂM TIẾNG ANH SPEAK&SPEAK SỬ DỤNG CÔNG NGHỆ NHẬN DIỆN GIỌNG NÓI
 
 Học sinh thực hiện: Nguyễn Hữu Hòa – Lớp 11L  
