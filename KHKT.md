@@ -324,12 +324,18 @@ Quy trình bài tập phân biệt ngữ âm:
 1. Người dùng chọn chế độ bài tập: phân biệt ngữ âm, nhận biết trọng âm, hoặc cả hai
 
 ![Trang chủ bài tập phân biệt ngữ âm](https://github.com/nguyenhhoa03/SpeakAndSpeak/blob/main/screenshot/Screenshot%20From%202025-10-12%2013-18-08.png?raw=true)
+
 2. Hệ thống tạo câu hỏi với 4 từ có phần đánh dấu
+   
 ![Chọn từ các phần đánh dấu phát âm khác](https://github.com/nguyenhhoa03/SpeakAndSpeak/blob/main/screenshot/Screenshot%20From%202025-10-12%2013-18-21.png?raw=true)
-3. Người dùng chọn từ có phát âm khác với các từ còn lại
+
+4. Người dùng chọn từ có phát âm khác với các từ còn lại
+   
 ![Chọn từ có trọng âm khác](https://github.com/nguyenhhoa03/SpeakAndSpeak/blob/main/screenshot/Screenshot%20From%202025-10-12%2013-18-31.png?raw=true)
-4. Hệ thống kiểm tra và hiển thị kết quả
-5. Lưu kết quả vào lịch sử bài tập
+
+6. Hệ thống kiểm tra và hiển thị kết quả
+7. 
+8. Lưu kết quả vào lịch sử bài tập
 
 Quy trình thống kê tiến bộ:
 
@@ -528,15 +534,11 @@ Cuối cùng, em hy vọng dự án **Speak&Speak** sẽ góp phần nhỏ bé v
 
 PHỤ LỤC
 
-A. Ảnh chụp màn hình ứng dụng
-
-(Các ảnh đã được hiển thị trong phần báo cáo)
-
-B. Cấu trúc thư mục dự án
+A. Cấu trúc thư mục dự án
 
 ![Thư mục chính của app](https://raw.githubusercontent.com/nguyenhhoa03/nguyenhhoa03/refs/heads/main/images/Screenshot%20From%202025-09-12%2023-44-12.png)
 
-C. Một số đoạn code quan trọng
+B. Một số đoạn code quan trọng
 
 ([Chi tiết code được lưu trữ tại repository GitHub](https://github.com/nguyenhhoa03/SpeakAndSpeak))
 
