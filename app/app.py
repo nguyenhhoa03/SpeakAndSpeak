@@ -489,44 +489,84 @@ class SpeakAndSpeakApp:
         github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/nguyenhhoa03/SpeakAndSpeak"))
     
     def start_discrimination_exercise(self):
-            """Launch the discrimination.exe (priority) or discrimination.py script"""
-            try:
-                self.exercise_status.configure(text="Starting exercise...")
-                
-                # Check if discrimination.exe exists first (priority)
-                exe_path = "discrimination.exe"
-                py_path = "discrimination"
-                
-                if os.path.exists(exe_path):
-                    # Run discrimination.exe in a separate process
-                    if platform.system() == "Windows":
-                        subprocess.Popen([exe_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-                    else:
-                        subprocess.Popen([exe_path])
+        """Launch discrimination executable or Python script based on platform and availability"""
+        try:
+            self.exercise_status.configure(text="Đang khởi động bài tập...")
+            
+            system = platform.system()
+            executable_found = False
+            launch_command = None
+            launch_type = ""
+            
+            # Định nghĩa các file cần tìm theo thứ tự ưu tiên
+            if system == "Windows":
+                # Windows: Ưu tiên .exe, sau đó .py
+                candidates = [
+                    ("discrimination.exe", ["{file}"], "EXE"),
+                    ("discrimination.py", [sys.executable, "{file}"], "Python")
+                ]
+            else:
+                # Linux/Unix: Ưu tiên file thực thi (không extension), sau đó .py
+                candidates = [
+                    ("discrimination", ["{file}"], "Binary"),
+                    ("discrimination.py", [sys.executable, "{file}"], "Python")
+                ]
+            
+            # Tìm file khả dụng đầu tiên
+            for filepath, cmd_template, file_type in candidates:
+                if os.path.exists(filepath):
+                    # Kiểm tra quyền thực thi trên Linux/Unix
+                    if system != "Windows" and file_type == "Binary":
+                        if not os.access(filepath, os.X_OK):
+                            continue  # Bỏ qua nếu không có quyền thực thi
                     
-                    self.exercise_status.configure(text="Exercise started successfully! (EXE)")
-                
-                elif os.path.exists(py_path):
-                    # Fallback: Run discrimination.py in a separate process
-                    if platform.system() == "Windows":
-                        subprocess.Popen([sys.executable, py_path], creationflags=subprocess.CREATE_NEW_CONSOLE)
-                    else:
-                        subprocess.Popen([sys.executable, py_path])
-                    
-                    self.exercise_status.configure(text="Exercise started successfully! (Python)")
-                
+                    executable_found = True
+                    launch_command = [cmd.format(file=filepath) if "{file}" in cmd else cmd 
+                                      for cmd in cmd_template]
+                    launch_type = file_type
+                    break
+            
+            # Nếu không tìm thấy file nào
+            if not executable_found:
+                error_msg = "Không tìm thấy file bài tập!\n"
+                if system == "Windows":
+                    error_msg += "Cần: discrimination.exe hoặc discrimination.py"
                 else:
-                    # Neither file exists
-                    messagebox.showerror("Error", "Neither discrimination.exe nor discrimination.py found!")
-                    self.exercise_status.configure(text="Error: File not found")
-                    return
+                    error_msg += "Cần: discrimination (executable) hoặc discrimination.py"
                 
-                # Clear status after 3 seconds
-                self.root.after(3000, lambda: self.exercise_status.configure(text=""))
-                
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to start exercise: {str(e)}")
-                self.exercise_status.configure(text=f"Error: {str(e)}")
+                messagebox.showerror("Lỗi", error_msg)
+                self.exercise_status.configure(text="Lỗi: Không tìm thấy file")
+                return
+            
+            # Khởi chạy chương trình
+            if system == "Windows":
+                # Windows: Tạo console mới
+                subprocess.Popen(launch_command, creationflags=subprocess.CREATE_NEW_CONSOLE)
+            else:
+                # Linux/Unix: Khởi chạy bình thường
+                subprocess.Popen(launch_command)
+            
+            # Hiển thị thông báo thành công
+            success_msg = f"Bài tập đã khởi động thành công! ({launch_type})"
+            self.exercise_status.configure(text=success_msg)
+            
+            # Xóa thông báo sau 3 giây
+            self.root.after(3000, lambda: self.exercise_status.configure(text=""))
+            
+        except FileNotFoundError as e:
+            error_msg = f"Không tìm thấy trình thông dịch Python hoặc file thực thi: {str(e)}"
+            messagebox.showerror("Lỗi", error_msg)
+            self.exercise_status.configure(text="Lỗi: File not found")
+        
+        except PermissionError as e:
+            error_msg = f"Không có quyền thực thi file: {str(e)}"
+            messagebox.showerror("Lỗi", error_msg)
+            self.exercise_status.configure(text="Lỗi: Permission denied")
+        
+        except Exception as e:
+            error_msg = f"Không thể khởi động bài tập: {str(e)}"
+            messagebox.showerror("Lỗi", error_msg)
+            self.exercise_status.configure(text=f"Lỗi: {str(e)}")
     
     def start_fake_progress(self, progress_bar, interval=1.0):
         if self.progress_timer:
